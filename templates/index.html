@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Comparison - AI Powered Analysis</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Adobe Clean Font (fallback to system fonts) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+</head>
+<body>
+    <div class="container">
+        <!-- Header - Adobe Firefly Style -->
+        <header class="header">
+            <div class="logo">
+                <i class="fas fa-fire-flame-curved"></i>
+            </div>
+            <h1>Image Comparison</h1>
+            <p class="subtitle">AI-powered image analysis with advanced comparison technology</p>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Upload Section -->
+            <div class="upload-section">
+                <form id="comparisonForm" enctype="multipart/form-data">
+                    <!-- Input Mode Toggle -->
+                    <div class="input-mode-toggle">
+                        <label class="toggle-label">
+                            <i class="fas fa-exchange-alt"></i> Input Method:
+                        </label>
+                        <div class="toggle-buttons">
+                            <button type="button" class="toggle-btn active" data-mode="upload" onclick="switchInputMode('upload')">
+                                <i class="fas fa-upload"></i> Upload Files
+                            </button>
+                            <button type="button" class="toggle-btn" data-mode="screenshot" onclick="switchInputMode('screenshot')">
+                                <i class="fas fa-camera"></i> Website Screenshots
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- File Upload Mode -->
+                    <div class="images-container" id="uploadMode">
+                        <!-- Image 1 Upload -->
+                        <div class="image-upload-box">
+                            <div class="upload-area" id="uploadArea1">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <p>Click or drag to upload</p>
+                                <p class="file-info">Image 1</p>
+                                <input type="file" id="image1" name="image1" accept="image/*">
+                            </div>
+                            <div class="image-preview" id="preview1" style="display: none;">
+                                <img id="previewImg1" src="" alt="Preview 1">
+                                <button type="button" class="remove-btn" onclick="removeImage(1)">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- VS Icon -->
+                        <div class="vs-icon">
+                            <span>VS</span>
+                        </div>
+
+                        <!-- Image 2 Upload -->
+                        <div class="image-upload-box">
+                            <div class="upload-area" id="uploadArea2">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <p>Click or drag to upload</p>
+                                <p class="file-info">Image 2</p>
+                                <input type="file" id="image2" name="image2" accept="image/*">
+                            </div>
+                            <div class="image-preview" id="preview2" style="display: none;">
+                                <img id="previewImg2" src="" alt="Preview 2">
+                                <button type="button" class="remove-btn" onclick="removeImage(2)">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Screenshot Mode -->
+                    <div class="screenshot-input-container" id="screenshotMode" style="display: none;">
+                        <div class="screenshot-url-inputs">
+                            <div class="screenshot-url-group">
+                                <label for="website1Url">
+                                    <i class="fas fa-globe"></i> Website 1 URL
+                                </label>
+                                <input type="url" id="website1Url" name="website1_url" placeholder="https://example.com" class="url-input">
+                            </div>
+
+                            <div class="vs-divider">
+                                <span>VS</span>
+                            </div>
+
+                            <div class="screenshot-url-group">
+                                <label for="website2Url">
+                                    <i class="fas fa-globe"></i> Website 2 URL
+                                </label>
+                                <input type="url" id="website2Url" name="website2_url" placeholder="https://example.org" class="url-input">
+                            </div>
+                        </div>
+
+                        <!-- Screenshot Settings -->
+                        <div class="screenshot-settings">
+                            <h3><i class="fas fa-cog"></i> Screenshot Settings</h3>
+
+                            <div class="settings-grid">
+                                <div class="setting-group">
+                                    <label for="viewportSize">
+                                        <i class="fas fa-desktop"></i> Viewport Size
+                                    </label>
+                                    <select id="viewportSize" name="viewport_size" class="setting-select">
+                                        <option value="desktop" selected>Desktop (1920x1080)</option>
+                                        <option value="tablet">Tablet (768x1024)</option>
+                                        <option value="mobile">Mobile (375x667)</option>
+                                    </select>
+                                </div>
+
+                                <div class="setting-group">
+                                    <label for="fullPage">
+                                        <i class="fas fa-arrows-alt-v"></i> Capture Mode
+                                    </label>
+                                    <select id="fullPage" name="full_page" class="setting-select">
+                                        <option value="true" selected>Full Page</option>
+                                        <option value="false">Viewport Only</option>
+                                    </select>
+                                </div>
+
+                                <div class="setting-group">
+                                    <label for="waitTime">
+                                        <i class="fas fa-clock"></i> Wait Time (seconds)
+                                    </label>
+                                    <select id="waitTime" name="wait_time" class="setting-select">
+                                        <option value="0">0 seconds</option>
+                                        <option value="1">1 second</option>
+                                        <option value="2">2 seconds</option>
+                                        <option value="3" selected>3 seconds</option>
+                                        <option value="5">5 seconds</option>
+                                        <option value="10">10 seconds</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="screenshot-info">
+                                <i class="fas fa-info-circle"></i>
+                                <span>Screenshots will be captured automatically. Full page mode scrolls and stitches the entire page. Wait time allows dynamic content to load.</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Options Section -->
+                    <div class="options-section">
+                        <div class="option-group">
+                            <label for="comparisonType">
+                                <i class="fas fa-sliders-h"></i> Comparison Type
+                            </label>
+                            <select id="comparisonType" name="comparison_type">
+                                <option value="general">General Comparison</option>
+                                <option value="differences">Find Differences</option>
+                                <option value="similarities">Find Similarities</option>
+                                <option value="detailed">Detailed Analysis</option>
+                            </select>
+                        </div>
+
+                        <div class="option-group">
+                            <label for="model">
+                                <i class="fas fa-brain"></i> AI Model
+                            </label>
+                            <select id="model" name="model">
+                                <option value="gemini-2.5-flash">Gemini 2.5 Flash (Fast)</option>
+                                <option value="gemini-2.5-pro">Gemini 2.5 Pro (Best Quality)</option>
+                                <option value="gemini-2.0-flash">Gemini 2.0 Flash</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Custom Prompt -->
+                    <div class="custom-prompt-section">
+                        <label for="customPrompt">
+                            <i class="fas fa-comment-dots"></i> Custom Prompt (Optional)
+                        </label>
+                        <textarea 
+                            id="customPrompt" 
+                            name="custom_prompt" 
+                            placeholder="Enter a custom prompt for specific analysis... (e.g., 'Which image has better lighting?')"
+                            rows="3"
+                        ></textarea>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <button type="submit" class="compare-btn" id="compareBtn">
+                        <i class="fas fa-magic"></i> Compare Images
+                    </button>
+                </form>
+            </div>
+
+            <!-- Loading Indicator -->
+            <div class="loading" id="loading" style="display: none;">
+                <div class="spinner"></div>
+                <p>Analyzing images with AI...</p>
+            </div>
+
+            <!-- Results Section -->
+            <div class="results-section" id="resultsSection" style="display: none;">
+                <div class="results-header">
+                    <h2><i class="fas fa-chart-line"></i> Analysis Results</h2>
+                    <div class="download-buttons">
+                        <button class="download-btn" onclick="downloadPDF()">
+                            <i class="fas fa-file-pdf"></i> Download PDF Report
+                        </button>
+                    </div>
+                </div>
+
+                <div class="results-content">
+                    <div class="analysis-text" id="analysisText"></div>
+                    
+                    <div class="results-meta">
+                        <div class="meta-item">
+                            <i class="fas fa-robot"></i>
+                            <span>Model: <strong id="modelUsed"></strong></span>
+                        </div>
+                        <div class="meta-item">
+                            <i class="fas fa-coins"></i>
+                            <span>Tokens: <strong id="tokensUsed"></strong></span>
+                        </div>
+                        <div class="meta-item">
+                            <i class="fas fa-layer-group"></i>
+                            <span>Type: <strong id="comparisonTypeUsed"></strong></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Error Section -->
+            <div class="error-section" id="errorSection" style="display: none;">
+                <div class="error-content">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <h3>Error</h3>
+                    <p id="errorMessage"></p>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer - Adobe Firefly Style -->
+        <footer class="footer">
+            <p><i class="fas fa-fire-flame-curved"></i> Firefly-Inspired Design | Powered by Google Gemini AI</p>
+        </footer>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>
+
