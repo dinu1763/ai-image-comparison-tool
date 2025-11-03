@@ -32,11 +32,11 @@
                             <i class="fas fa-exchange-alt"></i> Input Method:
                         </label>
                         <div class="toggle-buttons">
-                            <button type="button" class="toggle-btn active" data-mode="upload" onclick="switchInputMode('upload')">
+                            <button type="button" class="toggle-btn active" data-mode="upload" id="uploadModeBtn">
                                 <i class="fas fa-upload"></i> Upload Files
                             </button>
-                            <button type="button" class="toggle-btn" data-mode="screenshot" onclick="switchInputMode('screenshot')">
-                                <i class="fas fa-camera"></i> Website Screenshots
+                            <button type="button" class="toggle-btn" data-mode="viewport" id="viewportModeBtn">
+                                <i class="fas fa-layer-group"></i> Viewport Comparison
                             </button>
                         </div>
                     </div>
@@ -81,38 +81,38 @@
                         </div>
                     </div>
 
-                    <!-- Screenshot Mode -->
-                    <div class="screenshot-input-container" id="screenshotMode" style="display: none;">
-                        <div class="screenshot-url-inputs">
-                            <div class="screenshot-url-group">
-                                <label for="website1Url">
+                    <!-- Viewport Comparison Mode -->
+                    <div class="viewport-comparison-container" id="viewportMode" style="display: none;">
+                        <div class="viewport-url-inputs">
+                            <div class="viewport-url-group">
+                                <label for="viewportWebsite1Url">
                                     <i class="fas fa-globe"></i> Website 1 URL
                                 </label>
-                                <input type="url" id="website1Url" name="website1_url" placeholder="https://example.com" class="url-input">
+                                <input type="url" id="viewportWebsite1Url" name="viewport_website1_url" placeholder="https://example.com" class="url-input">
                             </div>
 
                             <div class="vs-divider">
                                 <span>VS</span>
                             </div>
 
-                            <div class="screenshot-url-group">
-                                <label for="website2Url">
+                            <div class="viewport-url-group">
+                                <label for="viewportWebsite2Url">
                                     <i class="fas fa-globe"></i> Website 2 URL
                                 </label>
-                                <input type="url" id="website2Url" name="website2_url" placeholder="https://example.org" class="url-input">
+                                <input type="url" id="viewportWebsite2Url" name="viewport_website2_url" placeholder="https://example.org" class="url-input">
                             </div>
                         </div>
 
-                        <!-- Screenshot Settings -->
-                        <div class="screenshot-settings">
-                            <h3><i class="fas fa-cog"></i> Screenshot Settings</h3>
+                        <!-- Viewport Comparison Settings -->
+                        <div class="viewport-settings">
+                            <h3><i class="fas fa-layer-group"></i> Viewport Comparison Settings</h3>
 
                             <div class="settings-grid">
                                 <div class="setting-group">
-                                    <label for="viewportSize">
+                                    <label for="viewportComparisonSize">
                                         <i class="fas fa-desktop"></i> Viewport Size
                                     </label>
-                                    <select id="viewportSize" name="viewport_size" class="setting-select">
+                                    <select id="viewportComparisonSize" name="viewport_comparison_size" class="setting-select">
                                         <option value="desktop" selected>Desktop (1920x1080)</option>
                                         <option value="tablet">Tablet (768x1024)</option>
                                         <option value="mobile">Mobile (375x667)</option>
@@ -120,20 +120,10 @@
                                 </div>
 
                                 <div class="setting-group">
-                                    <label for="fullPage">
-                                        <i class="fas fa-arrows-alt-v"></i> Capture Mode
-                                    </label>
-                                    <select id="fullPage" name="full_page" class="setting-select">
-                                        <option value="true" selected>Full Page</option>
-                                        <option value="false">Viewport Only</option>
-                                    </select>
-                                </div>
-
-                                <div class="setting-group">
-                                    <label for="waitTime">
+                                    <label for="viewportWaitTime">
                                         <i class="fas fa-clock"></i> Wait Time (seconds)
                                     </label>
-                                    <select id="waitTime" name="wait_time" class="setting-select">
+                                    <select id="viewportWaitTime" name="viewport_wait_time" class="setting-select">
                                         <option value="0">0 seconds</option>
                                         <option value="1">1 second</option>
                                         <option value="2">2 seconds</option>
@@ -142,11 +132,23 @@
                                         <option value="10">10 seconds</option>
                                     </select>
                                 </div>
+
+                                <div class="setting-group">
+                                    <label for="viewportComparisonType">
+                                        <i class="fas fa-sliders-h"></i> Analysis Type
+                                    </label>
+                                    <select id="viewportComparisonType" name="viewport_comparison_type" class="setting-select">
+                                        <option value="general">General Comparison</option>
+                                        <option value="differences" selected>Find Differences</option>
+                                        <option value="similarities">Find Similarities</option>
+                                        <option value="detailed">Detailed Analysis</option>
+                                    </select>
+                                </div>
                             </div>
 
-                            <div class="screenshot-info">
+                            <div class="viewport-info">
                                 <i class="fas fa-info-circle"></i>
-                                <span>Screenshots will be captured automatically. Full page mode scrolls and stitches the entire page. Wait time allows dynamic content to load.</span>
+                                <span>Viewport comparison captures and analyzes each viewport position from top to bottom, generating a comprehensive PDF report with all comparisons.</span>
                             </div>
                         </div>
                     </div>
@@ -216,7 +218,10 @@
 
                 <div class="results-content">
                     <div class="analysis-text" id="analysisText"></div>
-                    
+
+                    <!-- Viewport comparison results container -->
+                    <div id="analysisResult"></div>
+
                     <div class="results-meta">
                         <div class="meta-item">
                             <i class="fas fa-robot"></i>

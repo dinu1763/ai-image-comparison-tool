@@ -1,15 +1,29 @@
-# Image Comparison Tool using LLM
+# AI-Powered Image Comparison Tool
 
-A powerful Python tool that uses OpenAI's GPT-4 Vision API to compare images and provide detailed AI-powered analysis of differences, similarities, and insights.
+A comprehensive Python tool that uses Google Gemini Vision API to compare images and websites with detailed AI-powered analysis. Features include image comparison, website screenshot comparison, and viewport-by-viewport website analysis.
 
 ## Features
 
+### Image Comparison
 - 🔍 **Multiple Comparison Types**: General, differences, similarities, and detailed analysis
 - 🎨 **Custom Prompts**: Use your own prompts for specific comparison needs
 - 💾 **Save Results**: Export comparison results to JSON format
-- 🔄 **Batch Processing**: Compare multiple image pairs in one go
-- 📊 **Token Usage Tracking**: Monitor API usage and costs
+- 📊 **Technical Metrics**: SSIM scores and difference region detection
 - 🎯 **High Detail Analysis**: Uses high-resolution image analysis for accurate results
+
+### Website Comparison
+- 📸 **Screenshot Capture**: Automatically capture full-page or viewport screenshots
+- 🖥️ **Multiple Viewports**: Desktop, Tablet, and Mobile viewport sizes
+- 🌐 **URL-based Comparison**: Compare websites directly without manual screenshots
+
+### **NEW: Viewport-by-Viewport Comparison**
+- 📑 **Comprehensive Analysis**: Compare websites viewport-by-viewport from top to bottom
+- 📄 **PDF Reports**: Generate professional PDF reports with all comparisons
+- 🎯 **Visual Highlights**: Automatically highlight difference regions
+- 📊 **Detailed Metrics**: SSIM scores and AI analysis for each viewport
+- 🔄 **Synchronized Scrolling**: Ensures accurate position-matched comparisons
+
+[See detailed documentation →](VIEWPORT_COMPARISON_GUIDE.md)
 
 ## Installation
 
@@ -20,14 +34,16 @@ A powerful Python tool that uses OpenAI's GPT-4 Vision API to compare images and
 pip install -r requirements.txt
 ```
 
-3. Set up your OpenAI API key:
+3. Set up your Google Gemini API key:
 ```bash
 # On Windows
-set OPENAI_API_KEY=your-api-key-here
+set GEMINI_API_KEY=your-api-key-here
 
 # On Linux/Mac
-export OPENAI_API_KEY=your-api-key-here
+export GEMINI_API_KEY=your-api-key-here
 ```
+
+Get your API key from [Google AI Studio](https://makersuite.google.com/app/apikey)
 
 ## Quick Start
 
@@ -177,6 +193,38 @@ result = tool.compare_images(
     custom_prompt="Which ad is more likely to drive engagement? Analyze visual hierarchy and appeal."
 )
 ```
+
+### 6. Viewport-by-Viewport Website Comparison
+Compare two websites comprehensively across all viewport positions:
+```python
+from viewport_comparison_tool import ViewportComparisonTool
+from viewport_report_generator import ViewportReportGenerator
+
+# Initialize tools
+viewport_tool = ViewportComparisonTool(comparison_tool=tool)
+
+# Perform comparison
+result = viewport_tool.compare_websites_by_viewport(
+    url1="https://example.com",
+    url2="https://example.org",
+    viewport_size='desktop',
+    comparison_type='differences'
+)
+
+# Generate PDF report
+if result['success']:
+    report_gen = ViewportReportGenerator()
+    report_gen.generate_report(result, 'comparison_report.pdf')
+```
+
+**Use Cases:**
+- Responsive design testing across different viewport sizes
+- A/B testing of website redesigns
+- Quality assurance for website updates
+- Competitive analysis
+- Cross-browser rendering comparison
+
+[See full documentation →](VIEWPORT_COMPARISON_GUIDE.md)
 
 ## Example Output
 

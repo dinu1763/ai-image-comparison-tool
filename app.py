@@ -12,7 +12,9 @@ from urllib.parse import urlparse
 from flask import Flask, render_template, request, jsonify, send_file
 from werkzeug.utils import secure_filename
 from image_comparison_tool import ImageComparisonTool
-from screenshot_tool import WebsiteScreenshotTool
+# from screenshot_tool import WebsiteScreenshotTool  # Screenshot feature removed
+from viewport_comparison_tool import ViewportComparisonTool
+from viewport_report_generator import ViewportReportGenerator
 from datetime import datetime
 from reportlab.lib.pagesizes import letter, A4
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
@@ -70,97 +72,55 @@ def compare_images():
         }), 500
 
     try:
-        # Determine input mode (file upload or screenshot)
+        # Handle file upload mode only (screenshot mode removed)
         input_mode = request.form.get('input_mode', 'upload')
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
 
         filepath1 = None
         filepath2 = None
 
-        if input_mode == 'screenshot':
-            # Handle screenshot mode
-            website1_url = request.form.get('website1_url', '').strip()
-            website2_url = request.form.get('website2_url', '').strip()
+        # Screenshot mode has been removed - only upload mode is supported
+        # if input_mode == 'screenshot':
+        #     [Screenshot handling code removed]
 
-            if not website1_url or not website2_url:
-                return jsonify({
-                    'success': False,
-                    'error': 'Both website URLs are required'
-                }), 400
+        # Handle file upload mode
+        if 'image1' not in request.files or 'image2' not in request.files:
+            return jsonify({
+                'success': False,
+                'error': 'Both images are required'
+            }), 400
 
-            # Get screenshot settings
-            viewport_size = request.form.get('viewport_size', 'desktop')
-            full_page = request.form.get('full_page', 'true').lower() == 'true'
-            wait_time = int(request.form.get('wait_time', '3'))
+        image1 = request.files['image1']
+        image2 = request.files['image2']
 
-            # Validate wait time
-            if wait_time < 0 or wait_time > 10:
-                wait_time = 3
+        # Check if files are selected
+        if image1.filename == '' or image2.filename == '':
+            return jsonify({
+                'success': False,
+                'error': 'Please select both images'
+            }), 400
 
-            # Create screenshot tool
-            screenshot_tool = WebsiteScreenshotTool()
+        # Validate file types
+        if not (allowed_file(image1.filename) and allowed_file(image2.filename)):
+            return jsonify({
+                'success': False,
+                'error': 'Invalid file type. Allowed types: PNG, JPG, JPEG, GIF, BMP, WEBP'
+            }), 400
 
-            # Capture screenshots
-            success, filepath1, filepath2, error = screenshot_tool.capture_comparison_screenshots(
-                url1=website1_url,
-                url2=website2_url,
-                save_dir=app.config['UPLOAD_FOLDER'],
-                viewport_size=viewport_size,
-                full_page=full_page,
-                wait_time=wait_time
-            )
+        # Save uploaded files
+        filename1 = secure_filename(f"{timestamp}_1_{image1.filename}")
+        filename2 = secure_filename(f"{timestamp}_2_{image2.filename}")
 
-            if not success:
-                return jsonify({
-                    'success': False,
-                    'error': error
-                }), 400
+        filepath1 = os.path.join(app.config['UPLOAD_FOLDER'], filename1)
+        filepath2 = os.path.join(app.config['UPLOAD_FOLDER'], filename2)
 
-        else:
-            # Handle file upload mode
-            if 'image1' not in request.files or 'image2' not in request.files:
-                return jsonify({
-                    'success': False,
-                    'error': 'Both images are required'
-                }), 400
-
-            image1 = request.files['image1']
-            image2 = request.files['image2']
-
-            # Check if files are selected
-            if image1.filename == '' or image2.filename == '':
-                return jsonify({
-                    'success': False,
-                    'error': 'Please select both images'
-                }), 400
-
-            # Validate file types
-            if not (allowed_file(image1.filename) and allowed_file(image2.filename)):
-                return jsonify({
-                    'success': False,
-                    'error': 'Invalid file type. Allowed types: PNG, JPG, JPEG, GIF, BMP, WEBP'
-                }), 400
-
-            # Save uploaded files
-            filename1 = secure_filename(f"{timestamp}_1_{image1.filename}")
-            filename2 = secure_filename(f"{timestamp}_2_{image2.filename}")
-
-            filepath1 = os.path.join(app.config['UPLOAD_FOLDER'], filename1)
-            filepath2 = os.path.join(app.config['UPLOAD_FOLDER'], filename2)
-
-            image1.save(filepath1)
-            image2.save(filepath2)
+        image1.save(filepath1)
+        image2.save(filepath2)
 
         # Get comparison parameters
         comparison_type = request.form.get('comparison_type', 'general')
         custom_prompt = request.form.get('custom_prompt', '')
         model = request.form.get('model', 'gemini-2.5-flash')
-
-        # Auto-detect responsive comparison for mobile/tablet screenshots
-        if input_mode == 'screenshot' and not custom_prompt:
-            viewport_size = request.form.get('viewport_size', 'desktop')
-            if viewport_size in ['mobile', 'tablet'] and comparison_type == 'general':
-                comparison_type = 'responsive'
 
         # Perform comparison
         result = comparison_tool.compare_images(
@@ -213,6 +173,150 @@ def health_check():
         'status': 'healthy',
         'api_configured': api_configured
     })
+
+
+@app.route('/compare-viewports', methods=['POST'])
+def compare_viewports():
+    """Handle viewport-by-viewport website comparison request"""
+
+    # Check if comparison tool is initialized
+    if comparison_tool is None:
+        return jsonify({
+            'success': False,
+            'error': 'API key not configured. Please set GEMINI_API_KEY environment variable.'
+        }), 500
+
+    try:
+        # Get request parameters
+        website1_url = request.form.get('website1_url', '').strip()
+        website2_url = request.form.get('website2_url', '').strip()
+
+        if not website1_url or not website2_url:
+            return jsonify({
+                'success': False,
+                'error': 'Both website URLs are required'
+            }), 400
+
+        # Get comparison settings
+        viewport_size = request.form.get('viewport_size', 'desktop')
+        wait_time = int(request.form.get('wait_time', '3'))
+        comparison_type = request.form.get('comparison_type', 'differences')
+        model = request.form.get('model', 'gemini-2.5-flash')
+
+        # Validate parameters
+        if viewport_size not in ['desktop', 'tablet', 'mobile']:
+            viewport_size = 'desktop'
+
+        if wait_time < 0 or wait_time > 10:
+            wait_time = 3
+
+        print(f"Starting viewport comparison:")
+        print(f"  URL 1: {website1_url}")
+        print(f"  URL 2: {website2_url}")
+        print(f"  Viewport: {viewport_size}")
+        print(f"  Model: {model}")
+
+        # Create viewport comparison tool
+        viewport_tool = ViewportComparisonTool(comparison_tool=comparison_tool)
+
+        # Perform comparison
+        result = viewport_tool.compare_websites_by_viewport(
+            url1=website1_url,
+            url2=website2_url,
+            viewport_size=viewport_size,
+            wait_time=wait_time,
+            comparison_type=comparison_type,
+            model=model
+        )
+
+        if not result.get('success'):
+            return jsonify(result), 500
+
+        # Generate PDF report
+        report_generator = ViewportReportGenerator()
+
+        # Generate filename
+        filename = report_generator.generate_report_filename(website1_url, website2_url)
+        output_path = os.path.join(UPLOAD_FOLDER, filename)
+
+        # Generate report
+        pdf_success = report_generator.generate_report(result, output_path)
+
+        if not pdf_success:
+            # Clean up temp files
+            for temp_file in result.get('temp_files', []):
+                try:
+                    if os.path.exists(temp_file):
+                        os.remove(temp_file)
+                except:
+                    pass
+
+            return jsonify({
+                'success': False,
+                'error': 'Failed to generate PDF report'
+            }), 500
+
+        # Prepare response with summary
+        summary = result['summary']
+        summary['pdf_filename'] = filename
+        summary['pdf_path'] = output_path
+
+        # Clean up temp files
+        for temp_file in result.get('temp_files', []):
+            try:
+                if os.path.exists(temp_file):
+                    os.remove(temp_file)
+            except:
+                pass
+
+        # Create appropriate message based on whether sections are used
+        if 'total_sections' in summary:
+            message = f'Comparison complete! {summary["total_viewports"]} viewports analyzed ({summary["total_sections"]} sections total).'
+        else:
+            message = f'Comparison complete! {summary["total_viewports"]} viewports analyzed.'
+
+        return jsonify({
+            'success': True,
+            'summary': summary,
+            'pdf_filename': filename,
+            'message': message
+        })
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+@app.route('/download-viewport-report/<filename>', methods=['GET'])
+def download_viewport_report(filename):
+    """Download viewport comparison PDF report"""
+    try:
+        # Secure the filename
+        filename = secure_filename(filename)
+        filepath = os.path.join(UPLOAD_FOLDER, filename)
+
+        if not os.path.exists(filepath):
+            return jsonify({
+                'success': False,
+                'error': 'Report file not found'
+            }), 404
+
+        return send_file(
+            filepath,
+            mimetype='application/pdf',
+            as_attachment=True,
+            download_name=filename
+        )
+
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
 
 
 @app.route('/download-pdf', methods=['POST'])

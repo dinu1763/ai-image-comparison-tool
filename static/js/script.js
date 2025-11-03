@@ -4,47 +4,70 @@ let currentImagePaths = {
     image1: null,
     image2: null
 };
-let currentInputMode = 'upload'; // 'upload' or 'screenshot'
+let currentInputMode = 'upload'; // 'upload' or 'viewport'
 
 // Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
     setupImageUpload(1);
     setupImageUpload(2);
     setupFormSubmit();
+    setupModeButtons();
 });
 
-// Switch between upload and screenshot input modes
+// Setup mode toggle buttons
+function setupModeButtons() {
+    const uploadBtn = document.getElementById('uploadModeBtn');
+    const viewportBtn = document.getElementById('viewportModeBtn');
+
+    if (uploadBtn) {
+        uploadBtn.addEventListener('click', function() {
+            switchInputMode('upload');
+        });
+    }
+
+    if (viewportBtn) {
+        viewportBtn.addEventListener('click', function() {
+            switchInputMode('viewport');
+        });
+    }
+}
+
+// Switch between upload and viewport input modes
 function switchInputMode(mode) {
     currentInputMode = mode;
 
     const uploadMode = document.getElementById('uploadMode');
-    const screenshotMode = document.getElementById('screenshotMode');
+    const viewportMode = document.getElementById('viewportMode');
     const uploadBtn = document.querySelector('.toggle-btn[data-mode="upload"]');
-    const screenshotBtn = document.querySelector('.toggle-btn[data-mode="screenshot"]');
+    const viewportBtn = document.querySelector('.toggle-btn[data-mode="viewport"]');
 
     // Hide all modes
     uploadMode.style.display = 'none';
-    screenshotMode.style.display = 'none';
+    viewportMode.style.display = 'none';
 
     // Remove active class from all buttons
     uploadBtn.classList.remove('active');
-    screenshotBtn.classList.remove('active');
+    viewportBtn.classList.remove('active');
 
     if (mode === 'upload') {
         uploadMode.style.display = 'grid';
         uploadBtn.classList.add('active');
 
-        // Clear screenshot inputs
-        document.getElementById('website1Url').value = '';
-        document.getElementById('website2Url').value = '';
-    } else if (mode === 'screenshot') {
-        screenshotMode.style.display = 'block';
-        screenshotBtn.classList.add('active');
+        // Clear viewport inputs
+        document.getElementById('viewportWebsite1Url').value = '';
+        document.getElementById('viewportWebsite2Url').value = '';
+    } else if (mode === 'viewport') {
+        viewportMode.style.display = 'block';
+        viewportBtn.classList.add('active');
 
         // Clear upload inputs
         removeImage(1);
         removeImage(2);
     }
+
+    // Clear previous results
+    document.getElementById('resultsSection').style.display = 'none';
+    document.getElementById('errorSection').style.display = 'none';
 }
 
 // Setup image upload for drag and drop
@@ -145,12 +168,12 @@ function setupFormSubmit() {
                 alert('Please select both images');
                 return;
             }
-        } else if (currentInputMode === 'screenshot') {
-            const website1 = document.getElementById('website1Url').value.trim();
-            const website2 = document.getElementById('website2Url').value.trim();
+        } else if (currentInputMode === 'viewport') {
+            const website1 = document.getElementById('viewportWebsite1Url').value.trim();
+            const website2 = document.getElementById('viewportWebsite2Url').value.trim();
 
             if (!website1 || !website2) {
-                alert('Please enter both website URLs');
+                alert('Please enter both website URLs for viewport comparison');
                 return;
             }
         }
@@ -163,8 +186,8 @@ function setupFormSubmit() {
         const loadingDiv = document.getElementById('loading');
         const loadingText = loadingDiv.querySelector('p');
 
-        if (currentInputMode === 'screenshot') {
-            loadingText.textContent = 'Capturing website screenshots and analyzing... This may take 30-60 seconds.';
+        if (currentInputMode === 'viewport') {
+            loadingText.textContent = 'Performing viewport-by-viewport comparison... This may take 2-5 minutes depending on page length.';
         } else {
             loadingText.textContent = 'Analyzing images...';
         }
@@ -172,7 +195,13 @@ function setupFormSubmit() {
         loadingDiv.style.display = 'block';
         document.getElementById('compareBtn').disabled = true;
 
-        // Prepare form data
+        // Handle viewport comparison separately
+        if (currentInputMode === 'viewport') {
+            await handleViewportComparison(form);
+            return;
+        }
+
+        // Prepare form data for regular comparison
         const formData = new FormData(form);
 
         // Add input mode to form data
@@ -184,13 +213,13 @@ function setupFormSubmit() {
                 method: 'POST',
                 body: formData
             });
-            
+
             const result = await response.json();
-            
+
             // Hide loading
             document.getElementById('loading').style.display = 'none';
             document.getElementById('compareBtn').disabled = false;
-            
+
             if (result.success) {
                 // Show results
                 displayResults(result);
@@ -198,12 +227,12 @@ function setupFormSubmit() {
                 // Show error
                 displayError(result.error);
             }
-            
+
         } catch (error) {
             // Hide loading
             document.getElementById('loading').style.display = 'none';
             document.getElementById('compareBtn').disabled = false;
-            
+
             // Show error
             displayError('An error occurred while processing your request. Please try again.');
             console.error('Error:', error);
@@ -315,3 +344,189 @@ async function downloadPDF() {
     }
 }
 
+// Handle viewport comparison
+async function handleViewportComparison(form) {
+    try {
+        // Prepare form data
+        const formData = new FormData();
+
+        // Get viewport comparison specific fields
+        const website1 = document.getElementById('viewportWebsite1Url').value.trim();
+        const website2 = document.getElementById('viewportWebsite2Url').value.trim();
+        const viewportSize = document.getElementById('viewportComparisonSize').value;
+        const waitTime = document.getElementById('viewportWaitTime').value;
+        const comparisonType = document.getElementById('viewportComparisonType').value;
+        const model = document.getElementById('model').value;
+
+        formData.append('website1_url', website1);
+        formData.append('website2_url', website2);
+        formData.append('viewport_size', viewportSize);
+        formData.append('wait_time', waitTime);
+        formData.append('comparison_type', comparisonType);
+        formData.append('model', model);
+
+        // Send request to viewport comparison endpoint
+        const response = await fetch('/compare-viewports', {
+            method: 'POST',
+            body: formData
+        });
+
+        console.log('Response status:', response.status);
+
+        const result = await response.json();
+        console.log('Response data:', result);
+
+        // Hide loading
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('compareBtn').disabled = false;
+
+        if (result.success) {
+            // Display viewport comparison results
+            try {
+                displayViewportResults(result);
+            } catch (displayError) {
+                console.error('Error displaying results:', displayError);
+                // Show error with more details
+                const errorMsg = `Failed to display results: ${displayError.message}. Check console for details.`;
+                showError(errorMsg);
+            }
+        } else {
+            // Show error
+            showError(result.error || 'Unknown error occurred');
+        }
+
+    } catch (error) {
+        // Hide loading
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('compareBtn').disabled = false;
+
+        // Show error
+        const errorMsg = `An error occurred during viewport comparison: ${error.message}. Check console for details.`;
+        showError(errorMsg);
+        console.error('Error in handleViewportComparison:', error);
+        console.error('Error stack:', error.stack);
+    }
+}
+
+// Helper function to show error (renamed to avoid conflict with variable name)
+function showError(message) {
+    displayError(message);
+}
+
+// Display viewport comparison results
+function displayViewportResults(result) {
+    try {
+        console.log('Displaying viewport results:', result);
+
+        const resultsSection = document.getElementById('resultsSection');
+        const analysisDiv = document.getElementById('analysisResult');
+        const analysisText = document.getElementById('analysisText');
+
+        if (!resultsSection || !analysisDiv) {
+            console.error('Required DOM elements not found');
+            console.error('resultsSection:', resultsSection);
+            console.error('analysisDiv:', analysisDiv);
+            throw new Error('Required DOM elements not found');
+        }
+
+        // Clear the regular analysis text (used for image comparison)
+        if (analysisText) {
+            analysisText.innerHTML = '';
+        }
+
+        // Create viewport results HTML
+        const summary = result.summary;
+
+        if (!summary) {
+            console.error('Summary not found in result');
+            throw new Error('Summary not found in result');
+        }
+
+        // Extract domain names from URLs
+        let domain1, domain2;
+        try {
+            domain1 = new URL(summary.url1).hostname;
+            domain2 = new URL(summary.url2).hostname;
+        } catch (e) {
+            console.error('Error parsing URLs:', e);
+            domain1 = summary.url1 || 'Website 1';
+            domain2 = summary.url2 || 'Website 2';
+        }
+
+        let html = `
+            <div class="viewport-results">
+                <h2><i class="fas fa-layer-group"></i> Viewport Comparison Complete</h2>
+
+                <div class="viewport-summary">
+                    <h3>Summary</h3>
+                    <div class="summary-grid">
+                        <div class="summary-item">
+                            <span class="summary-label">Website 1:</span>
+                            <span class="summary-value">${domain1}</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-label">Website 2:</span>
+                            <span class="summary-value">${domain2}</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-label">Viewport Size:</span>
+                            <span class="summary-value">${summary.viewport_size} (${summary.viewport_dimensions.width}x${summary.viewport_dimensions.height})</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-label">Total Viewports:</span>
+                            <span class="summary-value">${summary.total_viewports}</span>
+                        </div>
+        `;
+
+        html += `
+                        <div class="summary-item">
+                            <span class="summary-label">Differences Detected:</span>
+                            <span class="summary-value">${summary.total_differences}</span>
+                        </div>
+        `;
+
+        if (summary.average_ssim !== null && summary.average_ssim !== undefined) {
+            const similarityPct = (summary.average_ssim * 100).toFixed(2);
+            html += `
+                        <div class="summary-item">
+                            <span class="summary-label">Average Similarity:</span>
+                            <span class="summary-value">${similarityPct}%</span>
+                        </div>
+            `;
+        }
+
+        html += `
+                    </div>
+                </div>
+
+                <div class="viewport-download">
+                    <p><i class="fas fa-file-pdf"></i> A comprehensive PDF report has been generated with all viewport comparisons.</p>
+                    <a href="/download-viewport-report/${result.pdf_filename}" class="download-btn" download>
+                        <i class="fas fa-download"></i> Download Full Report
+                    </a>
+                </div>
+
+                <div class="viewport-message">
+                    <i class="fas fa-check-circle"></i>
+                    <p>${result.message}</p>
+                </div>
+            </div>
+        `;
+
+        analysisDiv.innerHTML = html;
+        resultsSection.style.display = 'block';
+
+        // Scroll to results
+        resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+        console.log('Viewport results displayed successfully');
+
+    } catch (error) {
+        console.error('Error in displayViewportResults:', error);
+        console.error('Error stack:', error.stack);
+        console.error('Result object:', result);
+
+        // Re-throw to be caught by caller
+        throw new Error(`Failed to display viewport results: ${error.message}`);
+    }
+}
