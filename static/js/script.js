@@ -12,6 +12,7 @@ document.addEventListener('DOMContentLoaded', function() {
     setupImageUpload(2);
     setupFormSubmit();
     setupModeButtons();
+    setupThemeToggle();
 });
 
 // Setup mode toggle buttons
@@ -84,7 +85,7 @@ function setupImageUpload(imageNumber) {
 
     // File input change
     fileInput.addEventListener('change', (e) => {
-        handleFileSelect(e.target.files[0], imageNumber);
+        handleFileSelect(e.target.files[0], imageNumber, false); // false = don't update file input
     });
 
     // Drag and drop
@@ -104,16 +105,16 @@ function setupImageUpload(imageNumber) {
         e.preventDefault();
         uploadArea.style.borderColor = '#667eea';
         uploadArea.style.background = '#f8f9ff';
-        
+
         const files = e.dataTransfer.files;
         if (files.length > 0) {
-            handleFileSelect(files[0], imageNumber);
+            handleFileSelect(files[0], imageNumber, true); // true = update file input for drag-drop
         }
     });
 }
 
 // Handle file selection
-function handleFileSelect(file, imageNumber) {
+function handleFileSelect(file, imageNumber, updateFileInput = true) {
     if (!file) return;
 
     // Validate file type
@@ -129,10 +130,12 @@ function handleFileSelect(file, imageNumber) {
         return;
     }
 
-    // Update file input
-    const dataTransfer = new DataTransfer();
-    dataTransfer.items.add(file);
-    document.getElementById(`image${imageNumber}`).files = dataTransfer.files;
+    // Update file input only for drag-and-drop (not for normal file input selection)
+    if (updateFileInput) {
+        const dataTransfer = new DataTransfer();
+        dataTransfer.items.add(file);
+        document.getElementById(`image${imageNumber}`).files = dataTransfer.files;
+    }
 
     // Show preview
     const reader = new FileReader();
@@ -529,4 +532,46 @@ function displayViewportResults(result) {
         // Re-throw to be caught by caller
         throw new Error(`Failed to display viewport results: ${error.message}`);
     }
+}
+
+// ============================================
+// Theme Toggle Functionality
+// ============================================
+
+function setupThemeToggle() {
+    const themeToggle = document.getElementById('themeToggle');
+    const body = document.body;
+
+    // Load saved theme from localStorage or default to dark
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    setTheme(savedTheme);
+
+    // Toggle theme on button click
+    themeToggle.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const currentTheme = body.getAttribute('data-theme') || 'dark';
+        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        setTheme(newTheme);
+
+        // Add animation effect
+        themeToggle.style.transform = 'rotate(360deg)';
+        setTimeout(() => {
+            themeToggle.style.transform = 'rotate(0deg)';
+        }, 300);
+    });
+}
+
+function setTheme(theme) {
+    const body = document.body;
+
+    // Set theme attribute
+    body.setAttribute('data-theme', theme);
+
+    // Save to localStorage
+    localStorage.setItem('theme', theme);
+
+    // Log theme change
+    console.log(`Theme changed to: ${theme}`);
 }

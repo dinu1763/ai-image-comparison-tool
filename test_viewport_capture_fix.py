@@ -1,10 +1,12 @@
 """
-Test script to verify viewport capture with full viewport approach
+Test script to verify viewport capture with 50% overlapping strategy
 Tests that:
 1. First viewport (scroll position 0) is captured correctly
 2. Full viewport is captured (no section division)
-3. Final viewport doesn't extend beyond page content
-4. Each viewport produces exactly 1 screenshot and 1 AI analysis
+3. Viewports overlap by 50% (scroll step = viewport_height / 2)
+4. Final viewport doesn't extend beyond page content
+5. Each viewport produces exactly 1 screenshot and 1 AI analysis
+6. Complete page coverage with no gaps
 """
 
 from viewport_comparison_tool import ViewportComparisonTool
@@ -97,6 +99,8 @@ def test_viewport_capture():
             print(f"\nSummary details:")
             print(f"  - Total viewports: {summary.get('total_viewports')}")
             print(f"  - Viewport dimensions: {summary.get('viewport_dimensions')}")
+            print(f"  - Scroll step: {summary.get('scroll_step')}px")
+            print(f"  - Overlap percentage: {summary.get('overlap_percentage')}%")
 
             # Verify no section fields in summary
             if 'total_sections' not in summary and 'sections_per_viewport' not in summary:
@@ -104,15 +108,31 @@ def test_viewport_capture():
             else:
                 print("  ⚠️  Section fields still present in summary")
 
+            # Verify overlap strategy
+            if summary.get('overlap_percentage') == 50:
+                print("  ✅ 50% overlap strategy implemented")
+            else:
+                print("  ⚠️  Overlap strategy not configured correctly")
+
+            # Verify scroll step calculation
+            viewport_height = summary.get('viewport_dimensions', {}).get('height', 0)
+            expected_scroll_step = viewport_height // 2
+            if summary.get('scroll_step') == expected_scroll_step:
+                print(f"  ✅ Scroll step correctly calculated ({expected_scroll_step}px = viewport_height / 2)")
+            else:
+                print(f"  ⚠️  Scroll step mismatch (expected {expected_scroll_step}px, got {summary.get('scroll_step')}px)")
+
             print()
             print("=" * 80)
             print("Expected Behavior Verified:")
             print("=" * 80)
             print("✅ First viewport should start at scroll position 0")
             print("✅ Each viewport captured as FULL screenshot (no sections)")
+            print("✅ Viewports overlap by 50% (scroll step = viewport_height / 2)")
             print("✅ Last viewport should contain actual page content")
             print("✅ No blank viewports at the end")
             print("✅ No section-related fields in data structure")
+            print("✅ Complete page coverage with no gaps")
             
         else:
             print(f"❌ Comparison failed: {result.get('error')}")

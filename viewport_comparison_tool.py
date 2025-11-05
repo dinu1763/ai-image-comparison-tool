@@ -378,34 +378,63 @@ class ViewportComparisonTool:
 
             print(f"Page heights: Website 1 = {height1}px, Website 2 = {height2}px")
 
-            # Calculate number of viewports needed to cover the entire page
-            # Use ceiling division to ensure we don't miss any content
-            # But also ensure we don't create viewports beyond the actual content
-            num_viewports = (max_height + viewport_height - 1) // viewport_height
+            # Calculate number of captures needed with 50% overlap strategy
+            # This ensures complete page coverage without missing any content
+            #
+            # Strategy: Each capture scrolls down by HALF the viewport height
+            # Example: 2000px page, 600px viewport
+            #   - Capture 1: scroll 0px, capture 0-600px
+            #   - Capture 2: scroll 300px, capture 300-900px (50% overlap)
+            #   - Capture 3: scroll 600px, capture 600-1200px (50% overlap)
+            #   - etc.
+            #
+            # Formula: num_captures = ceil((page_height - viewport_height) / (viewport_height / 2)) + 1
 
-            # Validate: if the last viewport would start beyond the content, reduce count
-            if (num_viewports - 1) * viewport_height >= max_height:
-                num_viewports = max(1, num_viewports - 1)
+            import math
 
-            print(f"Calculated {num_viewports} viewport(s) needed to cover {max_height}px of content")
+            scroll_step = viewport_height // 2  # Scroll by half viewport height for 50% overlap
+
+            if max_height <= viewport_height:
+                # Page fits in one viewport
+                num_captures = 1
+            else:
+                # Calculate captures needed with 50% overlap
+                # We need to cover (max_height - viewport_height) additional pixels
+                # Each step covers (viewport_height / 2) new pixels
+                num_captures = math.ceil((max_height - viewport_height) / scroll_step) + 1
+
+            print(f"Calculated {num_captures} capture(s) needed to cover {max_height}px of content")
+            print(f"Using 50% overlap strategy: scroll step = {scroll_step}px, viewport height = {viewport_height}px")
             print(f"Each viewport will be captured as a FULL screenshot (no section division)")
             print(f"\n{'='*80}")
             print(f"Starting viewport-by-viewport comparison from TOP of page (scroll position 0)")
+            print(f"With 50% overlap to ensure complete coverage")
             print(f"{'='*80}")
 
             # Store viewport comparisons
             viewport_comparisons = []
 
-            # Scroll through and compare each viewport
-            for viewport_num in range(num_viewports):
-                scroll_position = viewport_num * viewport_height
+            # Scroll through and compare each viewport with 50% overlap
+            for capture_num in range(num_captures):
+                # Calculate scroll position: each capture scrolls by half viewport height
+                scroll_position = capture_num * scroll_step
 
                 # Validate that we're not scrolling beyond the actual content
                 if scroll_position >= max_height:
-                    print(f"\n⚠️  Skipping viewport {viewport_num + 1} - scroll position {scroll_position}px exceeds page height {max_height}px")
+                    print(f"\n⚠️  Skipping capture {capture_num + 1} - scroll position {scroll_position}px exceeds page height {max_height}px")
                     break
 
-                print(f"\nProcessing viewport {viewport_num + 1}/{num_viewports} (scroll: {scroll_position}px)...")
+                # Calculate the bottom of this capture
+                capture_bottom = scroll_position + viewport_height
+
+                print(f"\nProcessing capture {capture_num + 1}/{num_captures} (scroll: {scroll_position}px, capturing {scroll_position}-{min(capture_bottom, max_height)}px)...")
+
+                # Show overlap information for captures after the first
+                if capture_num > 0:
+                    overlap_start = scroll_position
+                    overlap_end = (capture_num - 1) * scroll_step + viewport_height
+                    if overlap_end > scroll_position:
+                        print(f"  📊 50% overlap with previous capture: {overlap_start}-{min(overlap_end, max_height)}px")
 
                 # Scroll both pages to the same position
                 # Use smooth: false for instant scrolling to ensure accuracy
@@ -433,8 +462,8 @@ class ViewportComparisonTool:
                 temp_dir = tempfile.gettempdir()
                 timestamp = datetime.now().strftime('%Y%m%d_%H%M%S_%f')
 
-                img1_path = os.path.join(temp_dir, f'viewport1_v{viewport_num}_{timestamp}.png')
-                img2_path = os.path.join(temp_dir, f'viewport2_v{viewport_num}_{timestamp}.png')
+                img1_path = os.path.join(temp_dir, f'viewport1_v{capture_num}_{timestamp}.png')
+                img2_path = os.path.join(temp_dir, f'viewport2_v{capture_num}_{timestamp}.png')
 
                 screenshot1.save(img1_path)
                 screenshot2.save(img2_path)
@@ -452,7 +481,7 @@ class ViewportComparisonTool:
                         img1_path, img2_path, difference_regions
                     )
                     if highlight_image:
-                        highlight_path = os.path.join(temp_dir, f'highlight_v{viewport_num}_{timestamp}.png')
+                        highlight_path = os.path.join(temp_dir, f'highlight_v{capture_num}_{timestamp}.png')
                         highlight_image.save(highlight_path)
                         temp_files.append(highlight_path)
 
@@ -460,7 +489,7 @@ class ViewportComparisonTool:
                 ai_analysis = None
                 if self.comparison_tool:
                     try:
-                        print(f"  Running AI analysis for viewport {viewport_num + 1}...")
+                        print(f"  Running AI analysis for capture {capture_num + 1}...")
 
                         # Create custom prompt for concise bullet point format
                         bullet_prompt = f"""Compare these two website screenshots and provide a CONCISE analysis in bullet point format.
@@ -489,8 +518,8 @@ Keep it to 3-5 bullet points maximum. Be specific but concise."""
 
                 # Store viewport comparison data
                 viewport_data = {
-                    'viewport_number': viewport_num + 1,
-                    'total_viewports': num_viewports,
+                    'viewport_number': capture_num + 1,
+                    'total_viewports': num_captures,
                     'scroll_position': scroll_position,
                     'screenshot1_path': img1_path,
                     'screenshot2_path': img2_path,
@@ -520,7 +549,9 @@ Keep it to 3-5 bullet points maximum. Be specific but concise."""
                 'url2': url2,
                 'viewport_size': viewport_size,
                 'viewport_dimensions': {'width': viewport_width, 'height': viewport_height},
-                'total_viewports': num_viewports,
+                'total_viewports': num_captures,
+                'scroll_step': scroll_step,
+                'overlap_percentage': 50,
                 'page_height1': height1,
                 'page_height2': height2,
                 'total_differences': total_differences,
