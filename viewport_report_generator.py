@@ -258,8 +258,8 @@ class ViewportReportGenerator:
         domain2 = self._get_domain_name(summary['url2'])
         
         # Calculate image dimensions (side by side)
-        max_img_width = 3.0 * inch
-        max_img_height = 3.5 * inch
+        max_img_width = 4.0 * inch
+        max_img_height = 5.5 * inch
         
         img1_dims = self._resize_image_for_pdf(viewport_data['screenshot1_path'], max_img_width, max_img_height)
         img2_dims = self._resize_image_for_pdf(viewport_data['screenshot2_path'], max_img_width, max_img_height)
@@ -272,7 +272,7 @@ class ViewportReportGenerator:
              RLImage(viewport_data['screenshot2_path'], width=img2_dims[0], height=img2_dims[1])]
         ]
         
-        screenshot_table = Table(screenshot_table_data, colWidths=[3.25 * inch, 3.25 * inch])
+        screenshot_table = Table(screenshot_table_data, colWidths=[3.75 * inch, 3.75 * inch])
         screenshot_table.setStyle(TableStyle([
             ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
             ('VALIGN', (0, 0), (-1, -1), 'TOP'),
@@ -289,7 +289,7 @@ class ViewportReportGenerator:
 
             # Full width for highlight image
             max_highlight_width = 6.5 * inch
-            max_highlight_height = 3.0 * inch
+            max_highlight_height = 4.5 * inch
             highlight_dims = self._resize_image_for_pdf(
                 viewport_data['highlight_path'],
                 max_highlight_width,
