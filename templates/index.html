@@ -96,24 +96,43 @@
 
                     <!-- Viewport Comparison Mode -->
                     <div class="viewport-comparison-container" id="viewportMode" style="display: none;">
-                        <div class="viewport-url-inputs">
-                            <div class="viewport-url-group">
-                                <label for="viewportWebsite1Url">
-                                    <i class="fas fa-globe"></i> Website 1 URL
-                                </label>
-                                <input type="url" id="viewportWebsite1Url" name="viewport_website1_url" placeholder="https://example.com" class="url-input">
-                            </div>
+                        <!-- URL Pairs Container -->
+                        <div id="urlPairsContainer">
+                            <!-- First URL pair (default) -->
+                            <div class="url-pair-wrapper" data-pair-index="0">
+                                <div class="url-pair-header">
+                                    <span class="pair-number">Comparison #1</span>
+                                    <button type="button" class="remove-pair-btn" onclick="removeUrlPair(0)" style="display: none;">
+                                        <i class="fas fa-times"></i> Remove
+                                    </button>
+                                </div>
+                                <div class="viewport-url-inputs">
+                                    <div class="viewport-url-group">
+                                        <label>
+                                            <i class="fas fa-globe"></i> Website 1 URL
+                                        </label>
+                                        <input type="url" class="url-input viewport-url-1" placeholder="https://example.com" required>
+                                    </div>
 
-                            <div class="vs-divider">
-                                <span>VS</span>
-                            </div>
+                                    <div class="vs-divider">
+                                        <span>VS</span>
+                                    </div>
 
-                            <div class="viewport-url-group">
-                                <label for="viewportWebsite2Url">
-                                    <i class="fas fa-globe"></i> Website 2 URL
-                                </label>
-                                <input type="url" id="viewportWebsite2Url" name="viewport_website2_url" placeholder="https://example.org" class="url-input">
+                                    <div class="viewport-url-group">
+                                        <label>
+                                            <i class="fas fa-globe"></i> Website 2 URL
+                                        </label>
+                                        <input type="url" class="url-input viewport-url-2" placeholder="https://example.org" required>
+                                    </div>
+                                </div>
                             </div>
+                        </div>
+
+                        <!-- Add More Button -->
+                        <div class="add-pair-container">
+                            <button type="button" class="add-pair-btn" onclick="addUrlPair()">
+                                <i class="fas fa-plus-circle"></i> Add Another URL Pair
+                            </button>
                         </div>
 
                         <!-- Viewport Comparison Settings -->
@@ -129,20 +148,6 @@
                                         <option value="desktop" selected>Desktop (1920x1080)</option>
                                         <option value="tablet">Tablet (768x1024)</option>
                                         <option value="mobile">Mobile (375x667)</option>
-                                    </select>
-                                </div>
-
-                                <div class="setting-group">
-                                    <label for="viewportWaitTime">
-                                        <i class="fas fa-clock"></i> Wait Time (seconds)
-                                    </label>
-                                    <select id="viewportWaitTime" name="viewport_wait_time" class="setting-select">
-                                        <option value="0">0 seconds</option>
-                                        <option value="1">1 second</option>
-                                        <option value="2">2 seconds</option>
-                                        <option value="3" selected>3 seconds</option>
-                                        <option value="5">5 seconds</option>
-                                        <option value="10">10 seconds</option>
                                     </select>
                                 </div>
 
@@ -264,7 +269,7 @@
 
         <!-- Footer - Adobe Firefly Style -->
         <footer class="footer">
-            <p><i class="fas fa-fire-flame-curved"></i> Firefly-Inspired Design | Powered by Google Gemini AI</p>
+            <p><i class="fas fa-fire-flame-curved"></i> AI Powered Stage & Prod Comparison Tool</p>
         </footer>
     </div>
 

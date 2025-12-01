@@ -5,6 +5,7 @@ let currentImagePaths = {
     image2: null
 };
 let currentInputMode = 'upload'; // 'upload' or 'viewport'
+let urlPairCount = 1; // Track number of URL pairs
 
 // Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
@@ -54,9 +55,38 @@ function switchInputMode(mode) {
         uploadMode.style.display = 'grid';
         uploadBtn.classList.add('active');
 
-        // Clear viewport inputs
-        document.getElementById('viewportWebsite1Url').value = '';
-        document.getElementById('viewportWebsite2Url').value = '';
+        // Clear viewport inputs - reset to single pair
+        const container = document.getElementById('urlPairsContainer');
+        container.innerHTML = `
+            <div class="url-pair-wrapper" data-pair-index="0">
+                <div class="url-pair-header">
+                    <span class="pair-number">Comparison #1</span>
+                    <button type="button" class="remove-pair-btn" onclick="removeUrlPair(0)" style="display: none;">
+                        <i class="fas fa-times"></i> Remove
+                    </button>
+                </div>
+                <div class="viewport-url-inputs">
+                    <div class="viewport-url-group">
+                        <label>
+                            <i class="fas fa-globe"></i> Website 1 URL
+                        </label>
+                        <input type="url" class="url-input viewport-url-1" placeholder="https://example.com" required>
+                    </div>
+
+                    <div class="vs-divider">
+                        <span>VS</span>
+                    </div>
+
+                    <div class="viewport-url-group">
+                        <label>
+                            <i class="fas fa-globe"></i> Website 2 URL
+                        </label>
+                        <input type="url" class="url-input viewport-url-2" placeholder="https://example.org" required>
+                    </div>
+                </div>
+            </div>
+        `;
+        urlPairCount = 1;
     } else if (mode === 'viewport') {
         viewportMode.style.display = 'block';
         viewportBtn.classList.add('active');
@@ -172,11 +202,31 @@ function setupFormSubmit() {
                 return;
             }
         } else if (currentInputMode === 'viewport') {
-            const website1 = document.getElementById('viewportWebsite1Url').value.trim();
-            const website2 = document.getElementById('viewportWebsite2Url').value.trim();
-
-            if (!website1 || !website2) {
-                alert('Please enter both website URLs for viewport comparison');
+            // Validate URL pairs
+            const urlPairs = collectUrlPairs();
+            
+            if (urlPairs.length === 0) {
+                alert('Please enter at least one pair of website URLs for viewport comparison');
+                return;
+            }
+            
+            // Check if any pair has empty URLs
+            const pairWrappers = document.querySelectorAll('.url-pair-wrapper');
+            let hasEmptyUrls = false;
+            
+            pairWrappers.forEach((wrapper, index) => {
+                const url1 = wrapper.querySelector('.viewport-url-1').value.trim();
+                const url2 = wrapper.querySelector('.viewport-url-2').value.trim();
+                
+                if (url1 || url2) { // If either field has content
+                    if (!url1 || !url2) { // But not both
+                        hasEmptyUrls = true;
+                        alert(`Please enter both URLs for Comparison #${index + 1}`);
+                    }
+                }
+            });
+            
+            if (hasEmptyUrls) {
                 return;
             }
         }
@@ -350,53 +400,89 @@ async function downloadPDF() {
 // Handle viewport comparison
 async function handleViewportComparison(form) {
     try {
-        // Prepare form data
-        const formData = new FormData();
+        // Collect all URL pairs
+        const urlPairs = collectUrlPairs();
+        
+        if (urlPairs.length === 0) {
+            alert('Please enter at least one pair of URLs for comparison');
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('compareBtn').disabled = false;
+            return;
+        }
 
-        // Get viewport comparison specific fields
-        const website1 = document.getElementById('viewportWebsite1Url').value.trim();
-        const website2 = document.getElementById('viewportWebsite2Url').value.trim();
+        // Get common settings
         const viewportSize = document.getElementById('viewportComparisonSize').value;
-        const waitTime = document.getElementById('viewportWaitTime').value;
+        const waitTime = 3; // Default wait time
         const comparisonType = document.getElementById('viewportComparisonType').value;
         const model = document.getElementById('model').value;
 
-        formData.append('website1_url', website1);
-        formData.append('website2_url', website2);
-        formData.append('viewport_size', viewportSize);
-        formData.append('wait_time', waitTime);
-        formData.append('comparison_type', comparisonType);
-        formData.append('model', model);
+        const loadingDiv = document.getElementById('loading');
+        const loadingText = loadingDiv.querySelector('p');
 
-        // Send request to viewport comparison endpoint
-        const response = await fetch('/compare-viewports', {
-            method: 'POST',
-            body: formData
-        });
+        // Process each URL pair sequentially
+        const results = [];
+        for (let i = 0; i < urlPairs.length; i++) {
+            const pair = urlPairs[i];
+            
+            // Update loading message
+            loadingText.textContent = `Processing comparison ${i + 1} of ${urlPairs.length}: ${pair.website1_url} vs ${pair.website2_url}`;
 
-        console.log('Response status:', response.status);
+            // Prepare form data
+            const formData = new FormData();
+            formData.append('website1_url', pair.website1_url);
+            formData.append('website2_url', pair.website2_url);
+            formData.append('viewport_size', viewportSize);
+            formData.append('wait_time', waitTime);
+            formData.append('comparison_type', comparisonType);
+            formData.append('model', model);
 
-        const result = await response.json();
-        console.log('Response data:', result);
+            try {
+                // Send request to viewport comparison endpoint
+                const response = await fetch('/compare-viewports', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                console.log(`Comparison ${i + 1} response status:`, response.status);
+
+                const result = await response.json();
+                console.log(`Comparison ${i + 1} response data:`, result);
+
+                if (result.success) {
+                    results.push({
+                        success: true,
+                        pairIndex: i + 1,
+                        url1: pair.website1_url,
+                        url2: pair.website2_url,
+                        data: result
+                    });
+                } else {
+                    results.push({
+                        success: false,
+                        pairIndex: i + 1,
+                        url1: pair.website1_url,
+                        url2: pair.website2_url,
+                        error: result.error
+                    });
+                }
+            } catch (error) {
+                console.error(`Error in comparison ${i + 1}:`, error);
+                results.push({
+                    success: false,
+                    pairIndex: i + 1,
+                    url1: pair.website1_url,
+                    url2: pair.website2_url,
+                    error: error.message
+                });
+            }
+        }
 
         // Hide loading
         document.getElementById('loading').style.display = 'none';
         document.getElementById('compareBtn').disabled = false;
 
-        if (result.success) {
-            // Display viewport comparison results
-            try {
-                displayViewportResults(result);
-            } catch (displayError) {
-                console.error('Error displaying results:', displayError);
-                // Show error with more details
-                const errorMsg = `Failed to display results: ${displayError.message}. Check console for details.`;
-                showError(errorMsg);
-            }
-        } else {
-            // Show error
-            showError(result.error || 'Unknown error occurred');
-        }
+        // Display batch results
+        displayBatchViewportResults(results);
 
     } catch (error) {
         // Hide loading
@@ -534,6 +620,139 @@ function displayViewportResults(result) {
     }
 }
 
+// Display batch viewport comparison results
+function displayBatchViewportResults(results) {
+    try {
+        console.log('Displaying batch viewport results:', results);
+
+        const resultsSection = document.getElementById('resultsSection');
+        const analysisDiv = document.getElementById('analysisResult');
+        const analysisText = document.getElementById('analysisText');
+
+        if (!resultsSection || !analysisDiv) {
+            console.error('Required DOM elements not found');
+            throw new Error('Required DOM elements not found');
+        }
+
+        // Clear previous content
+        if (analysisText) {
+            analysisText.innerHTML = '';
+        }
+        analysisDiv.innerHTML = '';
+
+        // Create batch results summary
+        const successCount = results.filter(r => r.success).length;
+        const failCount = results.length - successCount;
+
+        let batchHtml = `
+            <div class="viewport-results">
+                <h2><i class="fas fa-layer-group"></i> Batch Viewport Comparison Results</h2>
+                
+                <div class="viewport-summary">
+                    <h3>Batch Summary</h3>
+                    <div class="summary-grid">
+                        <div class="summary-item">
+                            <span class="summary-label">Total Comparisons</span>
+                            <span class="summary-value">${results.length}</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-label">Successful</span>
+                            <span class="summary-value" style="color: #4ade80;">${successCount}</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-label">Failed</span>
+                            <span class="summary-value" style="color: #f87171;">${failCount}</span>
+                        </div>
+                    </div>
+                </div>
+        `;
+
+        // Display each comparison result
+        results.forEach((result, index) => {
+            if (result.success) {
+                const summary = result.data.summary;
+                const domain1 = extractDomain(result.url1);
+                const domain2 = extractDomain(result.url2);
+
+                batchHtml += `
+                    <div class="viewport-comparison-result">
+                        <div class="comparison-header">
+                            <h3>
+                                <i class="fas fa-check-circle" style="color: #4ade80;"></i>
+                                Comparison #${result.pairIndex}: ${domain1} vs ${domain2}
+                            </h3>
+                            <button class="download-btn" onclick="downloadViewportPDF('${summary.pdf_filename}')">
+                                <i class="fas fa-file-pdf"></i> Download PDF Report
+                            </button>
+                        </div>
+                        
+                        <div class="viewport-summary">
+                            <div class="summary-grid">
+                                <div class="summary-item">
+                                    <span class="summary-label">Total Viewports</span>
+                                    <span class="summary-value">${summary.total_viewports}</span>
+                                </div>
+                                <div class="summary-item">
+                                    <span class="summary-label">Differences Found</span>
+                                    <span class="summary-value">${summary.total_differences}</span>
+                                </div>
+                                ${summary.average_ssim ? `
+                                <div class="summary-item">
+                                    <span class="summary-label">Average Similarity</span>
+                                    <span class="summary-value">${(summary.average_ssim * 100).toFixed(2)}%</span>
+                                </div>
+                                ` : ''}
+                                <div class="summary-item">
+                                    <span class="summary-label">Viewport Size</span>
+                                    <span class="summary-value">${summary.viewport_size}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                batchHtml += `
+                    <div class="viewport-comparison-result error">
+                        <div class="comparison-header">
+                            <h3>
+                                <i class="fas fa-exclamation-circle" style="color: #f87171;"></i>
+                                Comparison #${result.pairIndex}: ${extractDomain(result.url1)} vs ${extractDomain(result.url2)}
+                            </h3>
+                        </div>
+                        <div class="error-content">
+                            <p><strong>Error:</strong> ${result.error}</p>
+                        </div>
+                    </div>
+                `;
+            }
+        });
+
+        batchHtml += '</div>';
+        analysisDiv.innerHTML = batchHtml;
+
+        // Show results section
+        resultsSection.style.display = 'block';
+
+        // Scroll to results
+        resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+        console.log('Batch viewport results displayed successfully');
+
+    } catch (error) {
+        console.error('Error in displayBatchViewportResults:', error);
+        throw new Error(`Failed to display batch viewport results: ${error.message}`);
+    }
+}
+
+function extractDomain(url) {
+    try {
+        const urlObj = new URL(url);
+        return urlObj.hostname;
+    } catch (e) {
+        return url;
+    }
+}
+
 // ============================================
 // Theme Toggle Functionality
 // ============================================
@@ -574,4 +793,96 @@ function setTheme(theme) {
 
     // Log theme change
     console.log(`Theme changed to: ${theme}`);
+}
+
+// ============================================
+// URL Pair Management for Batch Comparison
+// ============================================
+
+function addUrlPair() {
+    const container = document.getElementById('urlPairsContainer');
+    const newIndex = urlPairCount;
+    urlPairCount++;
+
+    const pairHtml = `
+        <div class="url-pair-wrapper" data-pair-index="${newIndex}">
+            <div class="url-pair-header">
+                <span class="pair-number">Comparison #${newIndex + 1}</span>
+                <button type="button" class="remove-pair-btn" onclick="removeUrlPair(${newIndex})">
+                    <i class="fas fa-times"></i> Remove
+                </button>
+            </div>
+            <div class="viewport-url-inputs">
+                <div class="viewport-url-group">
+                    <label>
+                        <i class="fas fa-globe"></i> Website 1 URL
+                    </label>
+                    <input type="url" class="url-input viewport-url-1" placeholder="https://example.com" required>
+                </div>
+
+                <div class="vs-divider">
+                    <span>VS</span>
+                </div>
+
+                <div class="viewport-url-group">
+                    <label>
+                        <i class="fas fa-globe"></i> Website 2 URL
+                    </label>
+                    <input type="url" class="url-input viewport-url-2" placeholder="https://example.org" required>
+                </div>
+            </div>
+        </div>
+    `;
+
+    container.insertAdjacentHTML('beforeend', pairHtml);
+    updateRemoveButtons();
+}
+
+function removeUrlPair(index) {
+    const pairWrapper = document.querySelector(`.url-pair-wrapper[data-pair-index="${index}"]`);
+    if (pairWrapper) {
+        pairWrapper.remove();
+        updatePairNumbers();
+        updateRemoveButtons();
+    }
+}
+
+function updatePairNumbers() {
+    const pairs = document.querySelectorAll('.url-pair-wrapper');
+    pairs.forEach((pair, index) => {
+        const numberSpan = pair.querySelector('.pair-number');
+        if (numberSpan) {
+            numberSpan.textContent = `Comparison #${index + 1}`;
+        }
+    });
+}
+
+function updateRemoveButtons() {
+    const pairs = document.querySelectorAll('.url-pair-wrapper');
+    const removeButtons = document.querySelectorAll('.remove-pair-btn');
+    
+    // Show remove buttons only if there's more than one pair
+    removeButtons.forEach(btn => {
+        btn.style.display = pairs.length > 1 ? 'flex' : 'none';
+    });
+}
+
+function collectUrlPairs() {
+    const pairs = [];
+    const pairWrappers = document.querySelectorAll('.url-pair-wrapper');
+    
+    pairWrappers.forEach((wrapper, index) => {
+        const url1 = wrapper.querySelector('.viewport-url-1').value.trim();
+        const url2 = wrapper.querySelector('.viewport-url-2').value.trim();
+        
+        if (url1 && url2) {
+            pairs.push({
+                website1_url: url1,
+                website2_url: url2,
+                index: index
+            });
+        }
+    });
+    
+    return pairs;
 }
