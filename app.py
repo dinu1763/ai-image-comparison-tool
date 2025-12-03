@@ -1036,7 +1036,7 @@ if __name__ == '__main__':
         print("="*80 + "\n")
     
     print("\n" + "="*80)
-    print("Image Comparison Tool - Web UI")
+    print("Adobe Visual QA Tool - Web UI")
     print("="*80)
     print("Starting server at: http://localhost:5000")
     print("Press Ctrl+C to stop the server")

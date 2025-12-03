@@ -801,8 +801,8 @@ function setTheme(theme) {
 
 function addUrlPair() {
     const container = document.getElementById('urlPairsContainer');
-    const newIndex = urlPairCount;
-    urlPairCount++;
+    const existingPairs = document.querySelectorAll('.url-pair-wrapper');
+    const newIndex = existingPairs.length; // Use current count as index
 
     const pairHtml = `
         <div class="url-pair-wrapper" data-pair-index="${newIndex}">
@@ -842,19 +842,34 @@ function removeUrlPair(index) {
     const pairWrapper = document.querySelector(`.url-pair-wrapper[data-pair-index="${index}"]`);
     if (pairWrapper) {
         pairWrapper.remove();
-        updatePairNumbers();
+        updatePairIndices();
         updateRemoveButtons();
     }
 }
 
-function updatePairNumbers() {
+function updatePairIndices() {
     const pairs = document.querySelectorAll('.url-pair-wrapper');
     pairs.forEach((pair, index) => {
+        // Update data attribute
+        pair.setAttribute('data-pair-index', index);
+        
+        // Update display number
         const numberSpan = pair.querySelector('.pair-number');
         if (numberSpan) {
             numberSpan.textContent = `Comparison #${index + 1}`;
         }
+        
+        // Update remove button onclick
+        const removeBtn = pair.querySelector('.remove-pair-btn');
+        if (removeBtn) {
+            removeBtn.setAttribute('onclick', `removeUrlPair(${index})`);
+        }
     });
+}
+
+function updatePairNumbers() {
+    // Kept for backward compatibility, calls the new function
+    updatePairIndices();
 }
 
 function updateRemoveButtons() {

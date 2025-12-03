@@ -120,16 +120,16 @@ class ViewportReportGenerator:
         ))
         elements.append(Spacer(1, 0.3 * inch))
         
-        # Comparison info
-        domain1 = self._get_domain_name(summary['url1'])
-        domain2 = self._get_domain_name(summary['url2'])
+        # Comparison info - display full URLs
+        url1 = summary['url1']
+        url2 = summary['url2']
         
         elements.append(Paragraph(
-            f"<b>Website 1:</b> {domain1}",
+            f"<b>Website 1:</b> {url1}",
             self.styles['CustomBody']
         ))
         elements.append(Paragraph(
-            f"<b>Website 2:</b> {domain2}",
+            f"<b>Website 2:</b> {url2}",
             self.styles['CustomBody']
         ))
         elements.append(Spacer(1, 0.2 * inch))
@@ -254,20 +254,32 @@ class ViewportReportGenerator:
         elements.append(Spacer(1, 0.15 * inch))
         
         # Screenshots side by side
-        domain1 = self._get_domain_name(summary['url1'])
-        domain2 = self._get_domain_name(summary['url2'])
+        # Create labels in format: domain_path
+        def format_url_label(url):
+            try:
+                parsed = urlparse(url)
+                domain = parsed.netloc.replace('www.', '')
+                path = parsed.path.strip('/')
+                if path:
+                    return f"{domain}_{path}".replace('/', '_')
+                return domain
+            except:
+                return url
+        
+        label1 = format_url_label(summary['url1'])
+        label2 = format_url_label(summary['url2'])
         
         # Calculate image dimensions (side by side)
-        max_img_width = 4.0 * inch
-        max_img_height = 5.5 * inch
+        max_img_width = 3.5 * inch
+        max_img_height = 6.5 * inch
         
         img1_dims = self._resize_image_for_pdf(viewport_data['screenshot1_path'], max_img_width, max_img_height)
         img2_dims = self._resize_image_for_pdf(viewport_data['screenshot2_path'], max_img_width, max_img_height)
         
         # Create table with screenshots
         screenshot_table_data = [
-            [Paragraph(f"<b>{domain1}</b>", self.styles['Metric']), 
-             Paragraph(f"<b>{domain2}</b>", self.styles['Metric'])],
+            [Paragraph(f"<b>{label1}</b>", self.styles['Metric']), 
+             Paragraph(f"<b>{label2}</b>", self.styles['Metric'])],
             [RLImage(viewport_data['screenshot1_path'], width=img1_dims[0], height=img1_dims[1]),
              RLImage(viewport_data['screenshot2_path'], width=img2_dims[0], height=img2_dims[1])]
         ]
@@ -398,15 +410,33 @@ class ViewportReportGenerator:
         Returns:
             Filename string
         """
-        domain1 = self._get_domain_name(url1).replace('.', '_').replace(':', '_')
-        domain2 = self._get_domain_name(url2).replace('.', '_').replace(':', '_')
-        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-
-        # Truncate domain names if too long
-        if len(domain1) > 30:
-            domain1 = domain1[:30]
-        if len(domain2) > 30:
-            domain2 = domain2[:30]
-
-        return f"viewport_comparison_{domain1}_vs_{domain2}_{timestamp}.pdf"
+        try:
+            # Parse the first URL to get domain and path
+            parsed = urlparse(url1)
+            domain = parsed.netloc.replace('www.', '')  # Remove www. prefix
+            path = parsed.path.strip('/')  # Remove leading/trailing slashes
+            
+            # Combine domain and path
+            if path:
+                filename_base = f"{domain}_{path}"
+            else:
+                filename_base = domain
+            
+            # Clean the filename - replace special characters with underscores
+            filename_base = filename_base.replace('/', '_').replace('.', '_')
+            filename_base = filename_base.replace(':', '_').replace('?', '_')
+            filename_base = filename_base.replace('&', '_').replace('=', '_')
+            
+            # Get today's date
+            date_str = datetime.now().strftime('%Y%m%d')
+            
+            # Truncate if too long (keep room for date)
+            if len(filename_base) > 50:
+                filename_base = filename_base[:50]
+            
+            return f"{filename_base}_{date_str}.pdf"
+        except:
+            # Fallback to timestamp-based name if parsing fails
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            return f"viewport_comparison_{timestamp}.pdf"
 
