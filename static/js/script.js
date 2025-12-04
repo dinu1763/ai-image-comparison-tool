@@ -54,6 +54,11 @@ function switchInputMode(mode) {
     if (mode === 'upload') {
         uploadMode.style.display = 'grid';
         uploadBtn.classList.add('active');
+        
+        // Remove required attribute from viewport inputs
+        document.querySelectorAll('.viewport-url-1, .viewport-url-2').forEach(input => {
+            input.removeAttribute('required');
+        });
 
         // Clear viewport inputs - reset to single pair
         const container = document.getElementById('urlPairsContainer');
@@ -70,7 +75,7 @@ function switchInputMode(mode) {
                         <label>
                             <i class="fas fa-globe"></i> Website 1 URL
                         </label>
-                        <input type="url" class="url-input viewport-url-1" placeholder="https://example.com" required>
+                        <input type="url" class="url-input viewport-url-1" placeholder="https://example.com">
                     </div>
 
                     <div class="vs-divider">
@@ -81,7 +86,7 @@ function switchInputMode(mode) {
                         <label>
                             <i class="fas fa-globe"></i> Website 2 URL
                         </label>
-                        <input type="url" class="url-input viewport-url-2" placeholder="https://example.org" required>
+                        <input type="url" class="url-input viewport-url-2" placeholder="https://example.org">
                     </div>
                 </div>
             </div>
@@ -90,6 +95,11 @@ function switchInputMode(mode) {
     } else if (mode === 'viewport') {
         viewportMode.style.display = 'block';
         viewportBtn.classList.add('active');
+        
+        // Add required attribute to viewport inputs
+        document.querySelectorAll('.viewport-url-1, .viewport-url-2').forEach(input => {
+            input.setAttribute('required', 'required');
+        });
 
         // Clear upload inputs
         removeImage(1);
@@ -832,6 +842,10 @@ function addUrlPair() {
     const container = document.getElementById('urlPairsContainer');
     const existingPairs = document.querySelectorAll('.url-pair-wrapper');
     const newIndex = existingPairs.length; // Use current count as index
+    
+    // Check if we're in viewport mode to add required attribute
+    const isViewportMode = currentInputMode === 'viewport';
+    const requiredAttr = isViewportMode ? ' required' : '';
 
     const pairHtml = `
         <div class="url-pair-wrapper" data-pair-index="${newIndex}">
@@ -846,7 +860,7 @@ function addUrlPair() {
                     <label>
                         <i class="fas fa-globe"></i> Website 1 URL
                     </label>
-                    <input type="url" class="url-input viewport-url-1" placeholder="https://example.com" required>
+                    <input type="url" class="url-input viewport-url-1" placeholder="https://example.com"${requiredAttr}>
                 </div>
 
                 <div class="vs-divider">
@@ -857,7 +871,7 @@ function addUrlPair() {
                     <label>
                         <i class="fas fa-globe"></i> Website 2 URL
                     </label>
-                    <input type="url" class="url-input viewport-url-2" placeholder="https://example.org" required>
+                    <input type="url" class="url-input viewport-url-2" placeholder="https://example.org"${requiredAttr}>
                 </div>
             </div>
         </div>
