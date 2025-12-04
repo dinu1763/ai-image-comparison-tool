@@ -255,19 +255,48 @@ function setupFormSubmit() {
         }
 
         // Prepare form data for regular comparison
-        const formData = new FormData(form);
-
+        const formData = new FormData();
+        
+        // Manually add files for upload mode
+        if (currentInputMode === 'upload') {
+            const image1 = document.getElementById('image1').files[0];
+            const image2 = document.getElementById('image2').files[0];
+            
+            console.log('Adding images to FormData:', image1, image2);
+            
+            formData.append('image1', image1);
+            formData.append('image2', image2);
+        }
+        
+        // Add comparison settings
+        const comparisonType = document.getElementById('comparisonType').value;
+        const model = document.getElementById('model').value;
+        const customPrompt = document.getElementById('customPrompt').value;
+        
+        console.log('Comparison settings:', { comparisonType, model, customPrompt });
+        
+        formData.append('comparison_type', comparisonType);
+        formData.append('model', model);
+        if (customPrompt) {
+            formData.append('custom_prompt', customPrompt);
+        }
+        
         // Add input mode to form data
         formData.append('input_mode', currentInputMode);
 
         try {
+            console.log('Sending request to /compare endpoint...');
+            
             // Send request
             const response = await fetch('/compare', {
                 method: 'POST',
                 body: formData
             });
 
+            console.log('Response status:', response.status);
+            
             const result = await response.json();
+            console.log('Response data:', result);
 
             // Hide loading
             document.getElementById('loading').style.display = 'none';
