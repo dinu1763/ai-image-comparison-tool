@@ -134,42 +134,69 @@ class ImageComparisonTool:
         """
         prompts = {
             "general": """
-                Please compare these two images and provide a comprehensive analysis including:
-                1. Overall similarities and differences
-                2. Key visual elements in each image
-                3. Color schemes and composition
-                4. Any notable changes or variations
-                5. Context and subject matter comparison
+                Compare these two images concisely. Provide ONLY:
+                
+                **Key Differences:**
+                • List 3-5 most important visual differences (be specific and brief)
+                
+                **Similarities:**
+                • List 2-3 main common elements
+                
+                **Overall Assessment:**
+                • One sentence summary of the comparison
+                
+                Keep each bullet point to 1-2 lines maximum. Be direct and precise.
             """,
             "differences": """
-                Please analyze these two images and identify all the differences between them.
-                Focus on:
-                1. Visual differences (colors, objects, positions)
-                2. Structural differences (layout, composition)
-                3. Content differences (what's added, removed, or changed)
-                4. Quality differences (resolution, clarity, effects)
-                Provide a detailed list of all differences you can identify.
+                Identify all differences between these images. Use this exact format:
+                
+                **Layout & Structure:**
+                • List any layout differences (1-2 lines each)
+                
+                **Visual Elements:**
+                • List changes in colors, images, or graphics (1-2 lines each)
+                
+                **Content:**
+                • List text or content changes (1-2 lines each)
+                
+                **Other Changes:**
+                • List any other notable differences (1-2 lines each)
+                
+                Be specific but concise. If no differences in a category, write "No differences detected."
             """,
             "similarities": """
-                Please analyze these two images and identify all the similarities between them.
-                Focus on:
-                1. Common visual elements
-                2. Similar color schemes or patterns
-                3. Matching objects or subjects
-                4. Similar composition or layout
-                5. Shared themes or context
+                Identify similarities between these images. Use this exact format:
+                
+                **Common Elements:**
+                • List 3-5 shared visual elements (1 line each)
+                
+                **Consistent Features:**
+                • List 2-3 matching design aspects (1 line each)
+                
+                **Overall Similarity:**
+                • One sentence assessment
+                
+                Be brief and specific.
             """,
             "detailed": """
-                Please provide an extremely detailed comparison of these two images including:
-                1. Pixel-level differences if visible
-                2. Color palette analysis for both images
-                3. Object detection and comparison
-                4. Composition and layout analysis
-                5. Lighting and shadow differences
-                6. Text or symbols present in each image
-                7. Quality assessment (resolution, clarity, artifacts)
-                8. Potential use cases or context for each image
-                9. Recommendations or insights based on the comparison
+                Provide a detailed comparison using this exact format:
+                
+                **Critical Differences:**
+                • List top 5 most important differences (1-2 lines each)
+                
+                **Visual Quality:**
+                • Compare resolution, clarity, and overall quality (2-3 lines total)
+                
+                **Design Elements:**
+                • Compare layout, colors, typography (2-3 lines total)
+                
+                **Content Analysis:**
+                • Compare text, images, and information presented (2-3 lines total)
+                
+                **Recommendation:**
+                • One clear recommendation or insight (2-3 lines)
+                
+                Keep each section concise and actionable.
             """,
             "responsive": """
                 Please analyze these two website screenshots captured at a specific viewport size (mobile, tablet, or desktop).
