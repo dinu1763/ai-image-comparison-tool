@@ -269,39 +269,42 @@ class ViewportReportGenerator:
         label1 = format_url_label(summary['url1'])
         label2 = format_url_label(summary['url2'])
         
-        # Calculate image dimensions (side by side)
-        max_img_width = 3.5 * inch
-        max_img_height = 6.5 * inch
+        # Calculate image dimensions (full width, stacked vertically for maximum clarity)
+        max_img_width = 7.0 * inch
+        max_img_height = 9.0 * inch
         
         img1_dims = self._resize_image_for_pdf(viewport_data['screenshot1_path'], max_img_width, max_img_height)
         img2_dims = self._resize_image_for_pdf(viewport_data['screenshot2_path'], max_img_width, max_img_height)
         
-        # Create table with screenshots
-        screenshot_table_data = [
-            [Paragraph(f"<b>{label1}</b>", self.styles['Metric']), 
-             Paragraph(f"<b>{label2}</b>", self.styles['Metric'])],
-            [RLImage(viewport_data['screenshot1_path'], width=img1_dims[0], height=img1_dims[1]),
-             RLImage(viewport_data['screenshot2_path'], width=img2_dims[0], height=img2_dims[1])]
-        ]
+        # Display screenshots vertically (one after another) for better visibility
+        # First screenshot
+        elements.append(Paragraph(f"<b>{label1}</b>", self.styles['SectionHeader']))
+        elements.append(Spacer(1, 0.1 * inch))
+        elements.append(RLImage(
+            viewport_data['screenshot1_path'], 
+            width=img1_dims[0], 
+            height=img1_dims[1]
+        ))
+        elements.append(Spacer(1, 0.3 * inch))
         
-        screenshot_table = Table(screenshot_table_data, colWidths=[3.75 * inch, 3.75 * inch])
-        screenshot_table.setStyle(TableStyle([
-            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-            ('TOPPADDING', (0, 0), (-1, 0), 5),
-            ('BOTTOMPADDING', (0, 0), (-1, 0), 5),
-        ]))
-        
-        elements.append(screenshot_table)
-        elements.append(Spacer(1, 0.2 * inch))
+        # Second screenshot
+        elements.append(Paragraph(f"<b>{label2}</b>", self.styles['SectionHeader']))
+        elements.append(Spacer(1, 0.1 * inch))
+        elements.append(RLImage(
+            viewport_data['screenshot2_path'], 
+            width=img2_dims[0], 
+            height=img2_dims[1]
+        ))
+        elements.append(Spacer(1, 0.3 * inch))
 
         # Difference highlight image if available
         if viewport_data.get('highlight_path') and os.path.exists(viewport_data['highlight_path']):
             elements.append(Paragraph("Visual Differences Highlighted", self.styles['SectionHeader']))
+            elements.append(Spacer(1, 0.1 * inch))
 
-            # Full width for highlight image
-            max_highlight_width = 6.5 * inch
-            max_highlight_height = 4.5 * inch
+            # Full width for highlight image - increased for better visibility
+            max_highlight_width = 7.25 * inch
+            max_highlight_height = 7.0 * inch
             highlight_dims = self._resize_image_for_pdf(
                 viewport_data['highlight_path'],
                 max_highlight_width,
@@ -313,32 +316,65 @@ class ViewportReportGenerator:
                 width=highlight_dims[0],
                 height=highlight_dims[1]
             ))
-            elements.append(Spacer(1, 0.15 * inch))
+            elements.append(Spacer(1, 0.3 * inch))
 
-        # AI Analysis
-        if viewport_data.get('ai_analysis'):
-            elements.append(Paragraph("AI Analysis", self.styles['SectionHeader']))
+        # AI Analysis - Always show when differences exist
+        has_differences = viewport_data.get('num_differences', 0) > 0
+        ai_analysis = viewport_data.get('ai_analysis')
+        
+        if has_differences:
+            elements.append(Paragraph("Detailed AI Analysis", self.styles['SectionHeader']))
+            elements.append(Spacer(1, 0.1 * inch))
+            
+            if ai_analysis and ai_analysis.strip() and 'unavailable' not in ai_analysis.lower():
+                # Format analysis as clear bullet points
+                analysis_text = ai_analysis.strip()
 
-            # Format analysis as bullet points
-            analysis_text = viewport_data['ai_analysis']
+                # Split by newlines to get individual lines
+                lines = analysis_text.split('\n')
 
-            # Split by newlines to get individual lines
-            lines = analysis_text.split('\n')
+                bullet_count = 0
+                for line in lines:
+                    line = line.strip()
+                    if line:
+                        # Remove existing bullet characters and clean up
+                        clean_line = line.lstrip('•-*→ ').strip()
 
-            for line in lines:
-                line = line.strip()
-                if line:
-                    # Remove existing bullet characters and clean up
-                    clean_line = line.lstrip('•-*→ ').strip()
+                        # Skip empty lines after cleaning
+                        if not clean_line:
+                            continue
 
-                    # Skip empty lines after cleaning
-                    if not clean_line:
-                        continue
-
-                    # Add bullet point and format as paragraph
-                    bullet_text = f"• {clean_line}"
-                    elements.append(Paragraph(bullet_text, self.styles['CustomBody']))
-                    elements.append(Spacer(1, 0.05 * inch))
+                        # Add bullet point and format as paragraph with clear spacing
+                        bullet_text = f"• {clean_line}"
+                        elements.append(Paragraph(bullet_text, self.styles['CustomBody']))
+                        elements.append(Spacer(1, 0.08 * inch))
+                        bullet_count += 1
+                
+                # If no valid bullets were added, show the count
+                if bullet_count == 0:
+                    elements.append(Paragraph(
+                        f"• {viewport_data['num_differences']} visual difference(s) detected in this viewport.",
+                        self.styles['CustomBody']
+                    ))
+                    elements.append(Paragraph(
+                        f"• AI analysis is processing or unavailable for this viewport.",
+                        self.styles['CustomBody']
+                    ))
+            else:
+                # AI analysis missing or failed - show basic info
+                elements.append(Paragraph(
+                    f"• {viewport_data['num_differences']} visual difference(s) detected in this viewport.",
+                    self.styles['CustomBody']
+                ))
+                elements.append(Spacer(1, 0.08 * inch))
+                if ai_analysis and 'unavailable' in ai_analysis.lower():
+                    elements.append(Paragraph(
+                        f"• AI analysis temporarily unavailable. Please check the difference highlight image above for visual changes.",
+                        self.styles['CustomBody']
+                    ))
+            
+            # Add extra space after analysis section
+            elements.append(Spacer(1, 0.2 * inch))
 
         elements.append(PageBreak())
 

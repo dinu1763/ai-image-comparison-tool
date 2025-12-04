@@ -15,6 +15,7 @@ from pathlib import Path
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.by import By
 from selenium.common.exceptions import TimeoutException, WebDriverException
 from webdriver_manager.chrome import ChromeDriverManager
 
@@ -153,6 +154,39 @@ class ViewportComparisonTool:
             time.sleep(wait_time)
         except TimeoutException:
             print("Warning: Page load timeout, proceeding anyway...")
+    
+    def _close_modal_popup(self, driver):
+        """Check for and close modal popup with id='modal-hash' if present"""
+        try:
+            # Wait 5 seconds for modal to appear
+            time.sleep(5)
+            
+            # Check if modal exists
+            modal = driver.find_element(By.ID, 'modal-hash')
+            
+            if modal and modal.is_displayed():
+                print("  📋 Modal popup detected (id='modal-hash'), attempting to close...")
+                
+                # Try to find and click the close button
+                try:
+                    # Look for close button with class 'dialog-close'
+                    close_button = modal.find_element(By.CLASS_NAME, 'dialog-close')
+                    close_button.click()
+                    print("  ✅ Modal popup closed successfully")
+                    time.sleep(1)  # Wait for modal to close
+                except Exception as e:
+                    print(f"  ⚠️  Could not click close button: {e}")
+                    # Try alternative method - press ESC key
+                    try:
+                        from selenium.webdriver.common.keys import Keys
+                        driver.find_element(By.TAG_NAME, 'body').send_keys(Keys.ESCAPE)
+                        print("  ✅ Modal closed using ESC key")
+                        time.sleep(1)
+                    except:
+                        print("  ⚠️  Could not close modal, proceeding anyway...")
+        except Exception:
+            # Modal not found or not displayed - this is fine, continue silently
+            pass
     
     def _get_page_height(self, driver):
         """Get total scrollable height of the page"""
@@ -363,6 +397,11 @@ class ViewportComparisonTool:
             # Wait for pages to load
             self._wait_for_page_load(driver1, wait_time)
             self._wait_for_page_load(driver2, wait_time)
+            
+            # Check for and close modal popups
+            print(f"Checking for modal popups...")
+            self._close_modal_popup(driver1)
+            self._close_modal_popup(driver2)
 
             # IMPORTANT: Scroll both pages to the top (position 0) before measuring
             # This ensures we start from the very top of the page
