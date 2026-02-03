@@ -54,15 +54,19 @@ class ViewportComparisonTool:
         'mobile': 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1'
     }
 
-    def __init__(self, comparison_tool: Optional[ImageComparisonTool] = None):
+    def __init__(self, comparison_tool: Optional[ImageComparisonTool] = None, extension_path: Optional[str] = None, user_email: Optional[str] = None):
         """
         Initialize the viewport comparison tool
 
         Args:
             comparison_tool: ImageComparisonTool instance for AI analysis
+            extension_path: Path to Chrome extension (.crx or unpacked folder) for sites requiring extensions
+            user_email: Email for authentication (e.g., dineshkumar@adobe.com)
         """
         self.comparison_tool = comparison_tool
-        self.screenshot_tool = WebsiteScreenshotTool()
+        self.screenshot_tool = WebsiteScreenshotTool(extension_path=extension_path, user_email=user_email)
+        self.extension_path = extension_path
+        self.user_email = user_email
 
         # Detect and set dynamic desktop viewport dimensions
         self._detect_desktop_viewport()
@@ -112,6 +116,10 @@ class ViewportComparisonTool:
         try:
             chrome_options = Options()
             
+            # Extension support (extensions don't work in headless mode)
+            if self.extension_path and headless:
+                headless = False
+            
             if headless:
                 chrome_options.add_argument('--headless=new')
             
@@ -120,6 +128,17 @@ class ViewportComparisonTool:
             chrome_options.add_argument('--disable-gpu')
             chrome_options.add_argument('--disable-blink-features=AutomationControlled')
             chrome_options.add_argument('--ignore-certificate-errors')
+            
+            # Load Chrome extension if provided (e.g., AEM Sidekick)
+            if self.extension_path:
+                if os.path.isdir(self.extension_path):
+                    # Unpacked extension
+                    chrome_options.add_argument(f'--load-extension={self.extension_path}')
+                    print(f"  ✓ Loading Chrome extension from: {self.extension_path}")
+                elif self.extension_path.endswith('.crx'):
+                    # Packed extension
+                    chrome_options.add_extension(self.extension_path)
+                    print(f"  ✓ Loading Chrome extension: {self.extension_path}")
             
             # Determine viewport type
             viewport_type = viewport_size if isinstance(viewport_size, str) else 'desktop'
@@ -187,6 +206,34 @@ class ViewportComparisonTool:
         except Exception:
             # Modal not found or not displayed - this is fine, continue silently
             pass
+    
+    def _handle_authentication(self, driver):
+        """
+        Handle authentication if user_email is provided
+        Waits for manual login or automated login flows
+        
+        Args:
+            driver: WebDriver instance
+        """
+        if not self.user_email:
+            return
+        
+        print(f"\n{'='*60}")
+        print(f"AUTHENTICATION REQUIRED")
+        print(f"{'='*60}")
+        print(f"Email: {self.user_email}")
+        print(f"\nPlease complete the following steps:")
+        print(f"1. Look for any login prompts or extension popups in the browser")
+        print(f"2. Enter your credentials if prompted")
+        print(f"3. Complete any 2FA/MFA verification")
+        print(f"4. Wait for the page to fully load")
+        print(f"\nWaiting up to 60 seconds for authentication...")
+        print(f"{'='*60}\n")
+        
+        # Wait for user to complete authentication
+        time.sleep(60)  # Adjust timeout as needed
+        
+        print("✓ Authentication wait complete. Proceeding with comparison...")
     
     def _get_page_height(self, driver):
         """Get total scrollable height of the page"""
@@ -393,6 +440,10 @@ class ViewportComparisonTool:
             # Load both pages
             driver1.get(url1)
             driver2.get(url2)
+            
+            # Handle authentication if extension requires it (only once for first driver)
+            if self.extension_path and self.user_email:
+                self._handle_authentication(driver1)
 
             # Wait for pages to load
             self._wait_for_page_load(driver1, wait_time)

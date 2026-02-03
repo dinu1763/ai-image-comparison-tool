@@ -202,6 +202,10 @@ def compare_viewports():
         wait_time = int(request.form.get('wait_time', '3'))
         comparison_type = request.form.get('comparison_type', 'differences')
         model = request.form.get('model', 'gemini-2.5-flash')
+        
+        # Extension and authentication support
+        extension_path = request.form.get('extension_path', '').strip()
+        user_email = request.form.get('user_email', '').strip()
 
         # Validate parameters
         if viewport_size not in ['desktop', 'tablet', 'mobile']:
@@ -215,9 +219,17 @@ def compare_viewports():
         print(f"  URL 2: {website2_url}")
         print(f"  Viewport: {viewport_size}")
         print(f"  Model: {model}")
+        if extension_path:
+            print(f"  Extension: {extension_path}")
+        if user_email:
+            print(f"  User: {user_email}")
 
-        # Create viewport comparison tool
-        viewport_tool = ViewportComparisonTool(comparison_tool=comparison_tool)
+        # Create viewport comparison tool with extension support
+        viewport_tool = ViewportComparisonTool(
+            comparison_tool=comparison_tool,
+            extension_path=extension_path if extension_path else None,
+            user_email=user_email if user_email else None
+        )
 
         # Perform comparison
         result = viewport_tool.compare_websites_by_viewport(

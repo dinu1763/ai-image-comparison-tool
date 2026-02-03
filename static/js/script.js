@@ -14,7 +14,77 @@ document.addEventListener('DOMContentLoaded', function() {
     setupFormSubmit();
     setupModeButtons();
     setupThemeToggle();
+    setupPredefinedUrls();
 });
+
+// Setup predefined URL pairs click handlers
+function setupPredefinedUrls() {
+    const predefinedRows = document.querySelectorAll('.predefined-url-row');
+    
+    predefinedRows.forEach(row => {
+        row.addEventListener('click', function() {
+            const prodUrl = this.getAttribute('data-prod');
+            const stageUrl = this.getAttribute('data-stage');
+            
+            // Find an empty URL pair or create a new one
+            const urlPairs = document.querySelectorAll('.url-pair-wrapper');
+            let targetPair = null;
+            
+            // Look for an empty pair (both inputs are empty)
+            for (const pair of urlPairs) {
+                const url1Input = pair.querySelector('.viewport-url-1');
+                const url2Input = pair.querySelector('.viewport-url-2');
+                
+                if (url1Input && url2Input && 
+                    url1Input.value.trim() === '' && 
+                    url2Input.value.trim() === '') {
+                    targetPair = pair;
+                    break;
+                }
+            }
+            
+            // If no empty pair found, create a new one
+            if (!targetPair) {
+                addUrlPair();
+                // Get the newly added pair (last one)
+                const allPairs = document.querySelectorAll('.url-pair-wrapper');
+                targetPair = allPairs[allPairs.length - 1];
+            }
+            
+            // Fill the target pair
+            if (targetPair) {
+                const url1Input = targetPair.querySelector('.viewport-url-1');
+                const url2Input = targetPair.querySelector('.viewport-url-2');
+                
+                if (url1Input && url2Input) {
+                    url1Input.value = prodUrl;
+                    url2Input.value = stageUrl;
+                    
+                    // Add visual feedback to the clicked row
+                    this.style.background = 'rgba(153, 51, 255, 0.2)';
+                    this.style.borderColor = 'var(--firefly-accent-purple)';
+                    
+                    setTimeout(() => {
+                        this.style.background = '';
+                        this.style.borderColor = '';
+                    }, 300);
+                    
+                    // Flash the input fields to show they were updated
+                    url1Input.style.background = 'rgba(0, 212, 255, 0.1)';
+                    url2Input.style.background = 'rgba(255, 51, 102, 0.1)';
+                    
+                    setTimeout(() => {
+                        url1Input.style.background = '';
+                        url2Input.style.background = '';
+                    }, 500);
+                    
+                    // Scroll to the filled pair
+                    targetPair.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
+            }
+        });
+    });
+}
 
 // Setup mode toggle buttons
 function setupModeButtons() {
@@ -474,6 +544,16 @@ async function handleViewportComparison(form) {
             formData.append('wait_time', waitTime);
             formData.append('comparison_type', comparisonType);
             formData.append('model', model);
+            
+            // Add extension support parameters
+            const extensionPath = document.getElementById('extensionPath')?.value || '';
+            const userEmail = document.getElementById('userEmail')?.value || '';
+            if (extensionPath) {
+                formData.append('extension_path', extensionPath);
+            }
+            if (userEmail) {
+                formData.append('user_email', userEmail);
+            }
 
             try {
                 // Send request to viewport comparison endpoint
