@@ -52,7 +52,7 @@ class ImageComparisonTool:
         image2_path: str,
         comparison_type: str = "general",
         custom_prompt: Optional[str] = None,
-        model: str = "gemini-2.5-flash"
+        model: str = "gemini-3-flash-preview"
     ) -> Dict[str, Any]:
         """
         Compare two images using Google Gemini Vision.
@@ -62,7 +62,7 @@ class ImageComparisonTool:
             image2_path: Path to the second image.
             comparison_type: Type of comparison - 'general', 'differences', 'similarities', 'detailed'
             custom_prompt: Custom prompt for specific comparison needs.
-            model: Gemini model to use (default: gemini-2.5-flash, options: gemini-2.5-pro, gemini-2.0-flash)
+            model: Gemini model to use (default: gemini-3-flash-preview, options: gemini-3.1-pro-preview, gemini-3.1-flash-lite-preview, gemini-2.5-flash, gemini-2.5-pro, gemini-2.5-flash-lite)
 
         Returns:
             Dictionary containing the comparison results.
@@ -297,8 +297,8 @@ def main():
     )
     parser.add_argument(
         "-m", "--model",
-        default="gemini-2.5-flash",
-        help="Gemini model to use (default: gemini-2.5-flash, options: gemini-2.5-pro, gemini-2.0-flash)"
+        default="gemini-3-flash-preview",
+        help="Gemini model to use (default: gemini-3-flash-preview, options: gemini-3.1-pro-preview, gemini-3.1-flash-lite-preview, gemini-2.5-flash, gemini-2.5-pro, gemini-2.5-flash-lite)"
     )
     parser.add_argument(
         "-k", "--api-key",

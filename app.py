@@ -120,7 +120,7 @@ def compare_images():
         # Get comparison parameters
         comparison_type = request.form.get('comparison_type', 'general')
         custom_prompt = request.form.get('custom_prompt', '')
-        model = request.form.get('model', 'gemini-2.5-flash')
+        model = request.form.get('model', 'gemini-3-flash-preview')
 
         # Perform comparison
         result = comparison_tool.compare_images(
@@ -158,9 +158,12 @@ def compare_images():
 def get_models():
     """Get available models"""
     models = [
-        {'value': 'gemini-2.5-flash', 'name': 'Gemini 2.5 Flash (Fast & Efficient)'},
-        {'value': 'gemini-2.5-pro', 'name': 'Gemini 2.5 Pro (Most Capable)'},
-        {'value': 'gemini-2.0-flash', 'name': 'Gemini 2.0 Flash'},
+        {'value': 'gemini-3-flash-preview', 'name': 'Gemini 3 Flash Preview (Fast & Powerful)'},
+        {'value': 'gemini-3.1-pro-preview', 'name': 'Gemini 3.1 Pro Preview (Most Capable)'},
+        {'value': 'gemini-3.1-flash-lite-preview', 'name': 'Gemini 3.1 Flash-Lite Preview (Budget)'},
+        {'value': 'gemini-2.5-flash', 'name': 'Gemini 2.5 Flash (Stable)'},
+        {'value': 'gemini-2.5-pro', 'name': 'Gemini 2.5 Pro (Stable)'},
+        {'value': 'gemini-2.5-flash-lite', 'name': 'Gemini 2.5 Flash-Lite (Stable, Budget)'},
     ]
     return jsonify(models)
 
@@ -173,6 +176,67 @@ def health_check():
         'status': 'healthy',
         'api_configured': api_configured
     })
+
+
+@app.route('/get-csv-urls', methods=['GET'])
+def get_csv_urls():
+    """Get URL pairs from CSV file with pagination"""
+    import csv
+    
+    try:
+        page = int(request.args.get('page', 1))
+        per_page = int(request.args.get('per_page', 50))
+        
+        csv_path = os.path.join(os.path.dirname(__file__), 'url.csv')
+        
+        if not os.path.exists(csv_path):
+            return jsonify({
+                'success': False,
+                'error': 'url.csv file not found'
+            }), 404
+        
+        url_pairs = []
+        with open(csv_path, 'r', encoding='utf-8') as f:
+            reader = csv.reader(f)
+            # Skip header row
+            header = next(reader, None)
+            
+            for row in reader:
+                if len(row) >= 2 and row[0].strip() and row[1].strip():
+                    url_pairs.append({
+                        'url1': row[0].strip(),
+                        'url2': row[1].strip()
+                    })
+        
+        total_count = len(url_pairs)
+        total_pages = (total_count + per_page - 1) // per_page
+        
+        # Calculate slice indices
+        start_idx = (page - 1) * per_page
+        end_idx = start_idx + per_page
+        
+        paginated_pairs = url_pairs[start_idx:end_idx]
+        
+        return jsonify({
+            'success': True,
+            'url_pairs': paginated_pairs,
+            'pagination': {
+                'current_page': page,
+                'per_page': per_page,
+                'total_count': total_count,
+                'total_pages': total_pages,
+                'has_next': page < total_pages,
+                'has_prev': page > 1,
+                'start_index': start_idx + 1,
+                'end_index': min(end_idx, total_count)
+            }
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
 
 
 @app.route('/compare-viewports', methods=['POST'])
@@ -201,7 +265,7 @@ def compare_viewports():
         viewport_size = request.form.get('viewport_size', 'desktop')
         wait_time = int(request.form.get('wait_time', '3'))
         comparison_type = request.form.get('comparison_type', 'differences')
-        model = request.form.get('model', 'gemini-2.5-flash')
+        model = request.form.get('model', 'gemini-3-flash-preview')
         
         # Extension and authentication support
         extension_path = request.form.get('extension_path', '').strip()

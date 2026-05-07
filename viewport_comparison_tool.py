@@ -95,7 +95,7 @@ class ViewportComparisonTool:
 
             # Calculate viewport dimensions: width = screen width, height = half screen height
             viewport_width = screen_width
-            viewport_height = screen_height // 2  # Integer division for whole pixels
+            viewport_height = screen_height  # Integer division for whole pixels
 
             # Update the desktop viewport
             self.VIEWPORTS['desktop'] = {
@@ -397,7 +397,7 @@ class ViewportComparisonTool:
         viewport_size: str = 'desktop',
         wait_time: int = 3,
         comparison_type: str = 'differences',
-        model: str = 'gemini-2.5-flash'
+        model: str = 'gemini-3-flash-preview'
     ) -> Dict[str, Any]:
         """
         Compare two websites viewport-by-viewport
