@@ -33,7 +33,7 @@
         <main class="main-content">
             <!-- Upload Section -->
             <div class="upload-section">
-                <form id="comparisonForm" enctype="multipart/form-data">
+                <form id="comparisonForm" enctype="multipart/form-data" novalidate>
                     <!-- Input Mode Toggle -->
                     <div class="input-mode-toggle">
                         <label class="toggle-label">
@@ -93,6 +93,113 @@
 
                     <!-- Viewport Comparison Mode -->
                     <div class="viewport-comparison-container" id="viewportMode" style="display: none;">
+                        <!-- Predefined URL Pairs -->
+                        <div class="predefined-urls-section">
+                            <div class="predefined-urls-header">
+                                <h3><i class="fas fa-bookmark"></i> Quick URL Pairs</h3>
+                                <span class="predefined-urls-hint">Click any row to auto-fill the URL fields</span>
+                            </div>
+                            <div class="predefined-urls-list">
+                                <div class="predefined-url-row" data-prod="https://www.adobe.com/?georouting=off&mep=off" data-stage="https://www.stage.adobe.com/?georouting=off&mep=off">
+                                    <span class="url-label">Homepage</span>
+                                    <span class="url-prod">adobe.com</span>
+                                    <i class="fas fa-arrows-alt-h"></i>
+                                    <span class="url-stage">stage.adobe.com</span>
+                                </div>
+                                <div class="predefined-url-row" data-prod="https://www.adobe.com/creativecloud.html?georouting=off&mep=off" data-stage="https://www.stage.adobe.com/creativecloud.html?georouting=off&mep=off">
+                                    <span class="url-label">Creative Cloud</span>
+                                    <span class="url-prod">creativecloud.html</span>
+                                    <i class="fas fa-arrows-alt-h"></i>
+                                    <span class="url-stage">creativecloud.html</span>
+                                </div>
+                                <div class="predefined-url-row" data-prod="https://www.adobe.com/creativecloud/photography.html?georouting=off&mep=off" data-stage="https://www.stage.adobe.com/creativecloud/photography.html?georouting=off&mep=off">
+                                    <span class="url-label">Photography</span>
+                                    <span class="url-prod">photography.html</span>
+                                    <i class="fas fa-arrows-alt-h"></i>
+                                    <span class="url-stage">photography.html</span>
+                                </div>
+                                <div class="predefined-url-row" data-prod="https://www.adobe.com/creativecloud/pro.html?georouting=off&mep=off" data-stage="https://www.stage.adobe.com/creativecloud/pro.html?georouting=off&mep=off">
+                                    <span class="url-label">CC Pro</span>
+                                    <span class="url-prod">pro.html</span>
+                                    <i class="fas fa-arrows-alt-h"></i>
+                                    <span class="url-stage">pro.html</span>
+                                </div>
+                                <div class="predefined-url-row" data-prod="https://www.adobe.com/creativecloud/buy/students.html?georouting=off&mep=off" data-stage="https://www.stage.adobe.com/creativecloud/buy/students.html?georouting=off&mep=off">
+                                    <span class="url-label">Students (US)</span>
+                                    <span class="url-prod">buy/students.html</span>
+                                    <i class="fas fa-arrows-alt-h"></i>
+                                    <span class="url-stage">buy/students.html</span>
+                                </div>
+                                <div class="predefined-url-row" data-prod="https://www.adobe.com/products/photoshop.html?georouting=off&mep=off" data-stage="https://www.stage.adobe.com/products/photoshop.html?georouting=off&mep=off">
+                                    <span class="url-label">Photoshop</span>
+                                    <span class="url-prod">photoshop.html</span>
+                                    <i class="fas fa-arrows-alt-h"></i>
+                                    <span class="url-stage">photoshop.html</span>
+                                </div>
+                                <div class="predefined-url-row" data-prod="https://www.adobe.com/products/premiere.html?georouting=off&mep=off" data-stage="https://www.stage.adobe.com/products/premiere.html?georouting=off&mep=off">
+                                    <span class="url-label">Premiere</span>
+                                    <span class="url-prod">premiere.html</span>
+                                    <i class="fas fa-arrows-alt-h"></i>
+                                    <span class="url-stage">premiere.html</span>
+                                </div>
+                                <div class="predefined-url-row" data-prod="https://www.adobe.com/products/firefly.html?georouting=off&mep=off" data-stage="https://www.stage.adobe.com/products/firefly.html?georouting=off&mep=off">
+                                    <span class="url-label">Firefly</span>
+                                    <span class="url-prod">firefly.html</span>
+                                    <i class="fas fa-arrows-alt-h"></i>
+                                    <span class="url-stage">firefly.html</span>
+                                </div>
+                                <div class="predefined-url-row" data-prod="https://www.adobe.com/jp/creativecloud/buy/students.html?georouting=off&mep=off" data-stage="https://www.stage.adobe.com/jp/creativecloud/buy/students.html?georouting=off&mep=off">
+                                    <span class="url-label">Students (JP)</span>
+                                    <span class="url-prod">jp/cc/.../students.html</span>
+                                    <i class="fas fa-arrows-alt-h"></i>
+                                    <span class="url-stage">jp/cc/.../students.html</span>
+                                </div>
+                                <div class="predefined-url-row" data-prod="https://www.adobe.com/mena_ar/products/photoshop.html?georouting=off&mep=off" data-stage="https://www.stage.adobe.com/mena_ar/products/photoshop.html?georouting=off&mep=off">
+                                    <span class="url-label">Photoshop (AR)</span>
+                                    <span class="url-prod">mena_ar/photoshop</span>
+                                    <i class="fas fa-arrows-alt-h"></i>
+                                    <span class="url-stage">mena_ar/photoshop</span>
+                                </div>
+                                <div class="predefined-url-row" data-prod="https://www.adobe.com/de/products/premiere.html?georouting=off&mep=off" data-stage="https://www.stage.adobe.com/de/products/premiere.html?georouting=off&mep=off">
+                                    <span class="url-label">Premiere (DE)</span>
+                                    <span class="url-prod">de/premiere.html</span>
+                                    <i class="fas fa-arrows-alt-h"></i>
+                                    <span class="url-stage">de/premiere.html</span>
+                                </div>
+                                <div class="predefined-url-row" data-prod="https://www.adobe.com/fr/products/firefly.html?georouting=off&mep=off" data-stage="https://www.stage.adobe.com/fr/products/firefly.html?georouting=off&mep=off">
+                                    <span class="url-label">Firefly (FR)</span>
+                                    <span class="url-prod">fr/firefly.html</span>
+                                    <i class="fas fa-arrows-alt-h"></i>
+                                    <span class="url-stage">fr/firefly.html</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- CSV URL Loader Section -->
+                        <div class="csv-loader-section">
+                            <div class="csv-loader-header">
+                                <h3><i class="fas fa-file-csv"></i> Load URLs from CSV</h3>
+                                <span class="csv-loader-hint">Load URL pairs from url.csv file (500 at a time)</span>
+                            </div>
+                            <div class="csv-loader-controls">
+                                <button type="button" class="csv-btn" id="loadCsvBtn" onclick="loadCsvUrls(1)">
+                                    <i class="fas fa-download"></i> Load First 500 URLs
+                                </button>
+                                <div class="csv-pagination" id="csvPagination" style="display: none;">
+                                    <button type="button" class="csv-nav-btn" id="csvPrevBtn" onclick="loadCsvUrls('prev')" disabled>
+                                        <i class="fas fa-chevron-left"></i> Previous 500
+                                    </button>
+                                    <span class="csv-page-info" id="csvPageInfo">1-500 of 1000</span>
+                                    <button type="button" class="csv-nav-btn" id="csvNextBtn" onclick="loadCsvUrls('next')">
+                                        Next 500 <i class="fas fa-chevron-right"></i>
+                                    </button>
+                                </div>
+                                <button type="button" class="csv-clear-btn" id="clearCsvBtn" onclick="clearCsvUrls()" style="display: none;">
+                                    <i class="fas fa-times"></i> Clear All
+                                </button>
+                            </div>
+                        </div>
+
                         <!-- URL Pairs Container -->
                         <div id="urlPairsContainer">
                             <!-- First URL pair (default) -->
@@ -108,7 +215,7 @@
                                         <label>
                                             <i class="fas fa-globe"></i> Website 1 URL
                                         </label>
-                                        <input type="url" class="url-input viewport-url-1" placeholder="https://example.com">
+                                        <input type="text" class="url-input viewport-url-1" placeholder="https://example.com">
                                     </div>
 
                                     <div class="vs-divider">
@@ -119,7 +226,7 @@
                                         <label>
                                             <i class="fas fa-globe"></i> Website 2 URL
                                         </label>
-                                        <input type="url" class="url-input viewport-url-2" placeholder="https://example.org">
+                                        <input type="text" class="url-input viewport-url-2" placeholder="https://example.org">
                                     </div>
                                 </div>
                             </div>
@@ -160,6 +267,32 @@
                                     </select>
                                 </div>
                             </div>
+                            
+                            <!-- Extension Support -->
+                            <div class="extension-section">
+                                <h4><i class="fas fa-puzzle-piece"></i> Chrome Extension Support (Optional)</h4>
+                                <div class="settings-grid">
+                                    <div class="setting-group">
+                                        <label for="extensionPath">
+                                            <i class="fas fa-folder"></i> Extension Path
+                                        </label>
+                                        <input type="text" id="extensionPath" name="extension_path" 
+                                               placeholder="C:\path\to\extension\folder or extension.crx"
+                                               class="setting-input">
+                                        <small class="field-hint">Path to unpacked extension folder or .crx file (e.g., AEM Sidekick)</small>
+                                    </div>
+
+                                    <div class="setting-group">
+                                        <label for="userEmail">
+                                            <i class="fas fa-envelope"></i> User Email
+                                        </label>
+                                        <input type="email" id="userEmail" name="user_email" 
+                                               placeholder="dineshkumar@adobe.com"
+                                               class="setting-input">
+                                        <small class="field-hint">Email for extension authentication</small>
+                                    </div>
+                                </div>
+                            </div>
 
                             <div class="viewport-info">
                                 <i class="fas fa-info-circle"></i>
@@ -187,9 +320,12 @@
                                 <i class="fas fa-brain"></i> AI Model
                             </label>
                             <select id="model" name="model">
-                                <option value="gemini-2.5-flash">Gemini 2.5 Flash (Fast)</option>
-                                <option value="gemini-2.5-pro">Gemini 2.5 Pro (Best Quality)</option>
-                                <option value="gemini-2.0-flash">Gemini 2.0 Flash</option>
+                                <option value="gemini-3-flash-preview">Gemini 3 Flash Preview (Fast & Powerful)</option>
+                                <option value="gemini-3.1-pro-preview">Gemini 3.1 Pro Preview (Best Quality)</option>
+                                <option value="gemini-3.1-flash-lite-preview">Gemini 3.1 Flash-Lite Preview (Budget)</option>
+                                <option value="gemini-2.5-flash">Gemini 2.5 Flash (Stable)</option>
+                                <option value="gemini-2.5-pro">Gemini 2.5 Pro (Stable)</option>
+                                <option value="gemini-2.5-flash-lite">Gemini 2.5 Flash-Lite (Stable, Budget)</option>
                             </select>
                         </div>
                     </div>

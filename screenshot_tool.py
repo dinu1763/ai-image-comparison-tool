@@ -35,9 +35,16 @@ class WebsiteScreenshotTool:
         'mobile': 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1'
     }
     
-    def __init__(self):
-        """Initialize the screenshot tool"""
+    def __init__(self, extension_path=None, user_email=None):
+        """Initialize the screenshot tool
+        
+        Args:
+            extension_path: Path to Chrome extension (.crx or unpacked folder)
+            user_email: Email for authentication (e.g., dineshkumar@adobe.com)
+        """
         self.driver = None
+        self.extension_path = extension_path
+        self.user_email = user_email
     
     def _setup_driver(self, viewport_size='desktop', headless=True):
         """
@@ -53,6 +60,10 @@ class WebsiteScreenshotTool:
         try:
             # Chrome options
             chrome_options = Options()
+            
+            # Extension support (extensions don't work in headless mode)
+            if self.extension_path and headless:
+                headless = False
 
             if headless:
                 chrome_options.add_argument('--headless=new')
@@ -64,6 +75,22 @@ class WebsiteScreenshotTool:
             chrome_options.add_argument('--disable-blink-features=AutomationControlled')
             chrome_options.add_argument('--ignore-certificate-errors')
             chrome_options.add_argument('--ignore-ssl-errors')
+            
+            # Load Chrome extension if provided (e.g., AEM Sidekick)
+            if self.extension_path:
+                if os.path.isdir(self.extension_path):
+                    # Unpacked extension
+                    chrome_options.add_argument(f'--load-extension={self.extension_path}')
+                    print(f"✓ Loading Chrome extension from: {self.extension_path}")
+                elif self.extension_path.endswith('.crx'):
+                    # Packed extension
+                    chrome_options.add_extension(self.extension_path)
+                    print(f"✓ Loading Chrome extension: {self.extension_path}")
+                
+                # Disable headless mode when using extensions (extensions don't work in headless)
+                if headless and self.extension_path:
+                    print("⚠️  Disabling headless mode (required for Chrome extensions)")
+                    headless = False
 
             # Determine viewport type
             viewport_type = viewport_size if isinstance(viewport_size, str) else 'desktop'
@@ -173,6 +200,34 @@ class WebsiteScreenshotTool:
         # Scroll back to top
         driver.execute_script("window.scrollTo(0, 0)")
         time.sleep(0.5)  # Wait for scroll to complete
+    
+    def _handle_authentication(self, driver):
+        """
+        Handle authentication if user_email is provided
+        Waits for manual login or automated login flows
+        
+        Args:
+            driver: WebDriver instance
+        """
+        if not self.user_email:
+            return
+        
+        print(f"\n{'='*60}")
+        print(f"AUTHENTICATION REQUIRED")
+        print(f"{'='*60}")
+        print(f"Email: {self.user_email}")
+        print(f"\nPlease complete the following steps:")
+        print(f"1. Look for any login prompts or extension popups in the browser")
+        print(f"2. Enter your credentials if prompted")
+        print(f"3. Complete any 2FA/MFA verification")
+        print(f"4. Wait for the page to fully load")
+        print(f"\nWaiting up to 60 seconds for authentication...")
+        print(f"{'='*60}\n")
+        
+        # Wait for user to complete authentication
+        time.sleep(60)  # Adjust timeout as needed
+        
+        print("✓ Authentication wait complete. Proceeding with screenshot capture...")
 
     def _get_full_page_screenshot(self, driver):
         """
@@ -299,6 +354,10 @@ class WebsiteScreenshotTool:
             # Load page
             print(f"Loading {url}...")
             driver.get(url)
+            
+            # Handle authentication if extension requires it
+            if self.extension_path and self.user_email:
+                self._handle_authentication(driver)
             
             # Wait for page to load
             self._wait_for_page_load(driver, wait_time=wait_time)

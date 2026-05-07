@@ -1216,6 +1216,131 @@ body:not([data-theme]) .theme-icon .fa-sun {
     border: 1px solid var(--firefly-border-primary);
 }
 
+/* Predefined URL Pairs Section */
+.predefined-urls-section {
+    background: var(--firefly-bg-elevated);
+    border-radius: 12px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    border: 1px solid var(--firefly-border-secondary);
+}
+
+.predefined-urls-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--firefly-border-secondary);
+}
+
+.predefined-urls-header h3 {
+    color: var(--firefly-text-primary);
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.predefined-urls-header h3 i {
+    color: var(--firefly-accent-purple);
+}
+
+.predefined-urls-hint {
+    color: var(--firefly-text-tertiary);
+    font-size: 0.75rem;
+    font-style: italic;
+}
+
+.predefined-urls-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    max-height: 280px;
+    overflow-y: auto;
+    padding-right: 0.5rem;
+}
+
+.predefined-urls-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.predefined-urls-list::-webkit-scrollbar-track {
+    background: var(--firefly-bg-secondary);
+    border-radius: 3px;
+}
+
+.predefined-urls-list::-webkit-scrollbar-thumb {
+    background: var(--firefly-border-primary);
+    border-radius: 3px;
+}
+
+.predefined-urls-list::-webkit-scrollbar-thumb:hover {
+    background: var(--firefly-accent-purple);
+}
+
+.predefined-url-row {
+    display: grid;
+    grid-template-columns: 100px 1fr 30px 1fr;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 0.75rem;
+    background: var(--firefly-bg-card);
+    border-radius: 8px;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: all 0.2s ease;
+}
+
+.predefined-url-row:hover {
+    background: var(--firefly-bg-hover);
+    border-color: var(--firefly-accent-purple);
+    transform: translateX(4px);
+}
+
+.predefined-url-row:active {
+    transform: translateX(4px) scale(0.99);
+}
+
+.predefined-url-row .url-label {
+    color: var(--firefly-text-primary);
+    font-weight: 600;
+    font-size: 0.8rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.predefined-url-row .url-prod,
+.predefined-url-row .url-stage {
+    color: var(--firefly-text-secondary);
+    font-size: 0.75rem;
+    font-family: var(--firefly-font-mono);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.predefined-url-row .url-prod {
+    color: var(--firefly-accent-cyan);
+}
+
+.predefined-url-row .url-stage {
+    color: var(--firefly-accent-pink);
+}
+
+.predefined-url-row i {
+    color: var(--firefly-text-tertiary);
+    font-size: 0.7rem;
+    text-align: center;
+}
+
+.predefined-url-row:hover i {
+    color: var(--firefly-accent-purple);
+}
+
 /* URL Pairs Container */
 #urlPairsContainer {
     display: flex;
@@ -1396,6 +1521,52 @@ body:not([data-theme]) .theme-icon .fa-sun {
 .viewport-info i {
     color: var(--firefly-accent-purple);
     margin-top: 0.2rem;
+}
+
+/* Extension Support Section */
+.extension-section {
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--firefly-border-secondary);
+}
+
+.extension-section h4 {
+    color: var(--firefly-text-primary);
+    font-size: 1rem;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 500;
+}
+
+.extension-section h4 i {
+    color: var(--firefly-accent-purple);
+}
+
+.setting-input {
+    width: 100%;
+    padding: 0.75rem;
+    background: var(--firefly-bg-input);
+    border: 1px solid var(--firefly-border-primary);
+    border-radius: 8px;
+    color: var(--firefly-text-primary);
+    font-size: 0.95rem;
+    transition: all var(--firefly-transition-fast);
+}
+
+.setting-input:focus {
+    outline: none;
+    border-color: var(--firefly-accent-purple);
+    box-shadow: 0 0 0 3px rgba(153, 51, 255, 0.1);
+}
+
+.field-hint {
+    display: block;
+    margin-top: 0.5rem;
+    color: var(--firefly-text-tertiary);
+    font-size: 0.85rem;
+    line-height: 1.4;
 }
 
 /* Viewport Results Styles */

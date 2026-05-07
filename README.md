@@ -10,7 +10,13 @@ A comprehensive AI-powered quality assurance tool for comparing Adobe stage and 
 - **Automated Processing**: Processes each pair one by one with progress updates
 - **Individual Reports**: Generates separate PDF reports for each comparison
 
-### 📊 Comprehensive Analysis
+### � Chrome Extension Support
+- **AEM Sidekick Integration**: Load Chrome extensions for sites requiring authentication
+- **Authentication Handling**: Automated login flow with manual authentication support
+- **Extension Management**: Support for both packed (.crx) and unpacked extensions
+- **User Authentication**: Configure user email for extension-based authentication
+
+### �📊 Comprehensive Analysis
 - **Viewport-by-Viewport**: Compare websites viewport-by-viewport from top to bottom
 - **AI-Powered Insights**: Detailed bullet-point analysis of visual differences
 - **Visual Highlights**: Automatically highlights difference regions in red
@@ -78,6 +84,22 @@ python app.py
 5. **Start Comparison**: Click "Compare Images"
 
 6. **Download Reports**: Each comparison generates a downloadable PDF report
+
+### Chrome Extension Support (for AEM Sidekick and similar extensions)
+
+For sites requiring Chrome extensions (e.g., AEM-based sites):
+
+1. **Install Extension**: Install AEM Sidekick or required extension in Chrome
+2. **Get Extension Path**: 
+   - Go to `chrome://extensions/`
+   - Find your extension and note the path (usually in `AppData\Local\Google\Chrome\User Data\Default\Extensions\[id]\[version]`)
+3. **Configure in UI**:
+   - Extension Path: `C:\Users\dineshkumar\AppData\Local\Google\Chrome\User Data\Default\Extensions\[extension-id]\[version]`
+   - User Email: `dineshkumar@adobe.com`
+4. **Authentication**: Browser opens for 60 seconds allowing manual authentication
+5. **Comparison Proceeds**: After authentication, comparison runs automatically
+
+**See [AEM_SIDEKICK_SETUP.md](AEM_SIDEKICK_SETUP.md) for detailed setup instructions.**
 
 ### URL Naming Format
 

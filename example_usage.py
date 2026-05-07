@@ -86,7 +86,7 @@ def example_detailed_analysis():
         image1_path="design_v1.png",
         image2_path="design_v2.png",
         comparison_type="detailed",
-        model="gemini-2.5-pro"  # Using the most capable model
+        model="gemini-3.1-pro-preview"  # Using the most capable model
     )
     
     if result["success"]:
